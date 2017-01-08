@@ -234,7 +234,8 @@ DISCONNECTING: {
 			eb.request(H("mqtt"), H("disconnect"), id());
 			eb.send();
 			timeout(2000);
-			PT_YIELD_UNTIL(timeout() );
+			PT_YIELD_UNTIL(timeout() || eb.isReplyCorrect(H("mqtt"),H("disconnect")) );
+			if ( eb.isReplyCorrect(H("mqtt"),H("disconnect")) ) goto CONNECTING;
 		}
 	}
 CONNECTING : {

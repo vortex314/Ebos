@@ -25,9 +25,9 @@ void System::onEvent(Cbor& msg)
 		.addKeyValue(H("upTime"),Sys::millis())
 		.addKeyValue(H("bootTime"),Sys::now()-Sys::millis());
 		eb.send();
-		
+
 	} else if (eb.isRequest(H("set"))) {
-		
+
 		uint64_t now;
 		Str hostname(20);
 		if ( msg.getKeyValue(H("now"),now)) {
@@ -37,20 +37,27 @@ void System::onEvent(Cbor& msg)
 		}
 		eb.reply().addKeyValue(EB_ERROR,E_OK);
 		eb.send();
-		
+
 	} else if (eb.isRequest(H("reset"))) {
-		
+
 		reset();
-		
+
 	} else
-		
+
 		eb.defaultHandler(this, msg);
 }
 
+#ifdef STM32F1
+void System::reset(){
 
+}
+#endif
+
+#ifdef ESP8266
 extern "C" void __real_system_restart_local();
 
 void System::reset()
 {
 	__real_system_restart_local();
 }
+#endif

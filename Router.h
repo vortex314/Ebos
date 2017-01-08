@@ -25,6 +25,7 @@ class Router: public Actor {
 public:
 	Router();
 	void setup();
+	void init(){};
 	bool addHeader(Json& json, Cbor& cbor, uint16_t key);
 	bool addTopic(Str& topic, Cbor& cbor, uint16_t key);
 	bool isHeaderField(uint16_t key);
