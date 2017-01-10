@@ -2,13 +2,25 @@
 
 Cbor* timeoutEvent;
 
+const char* eventbus_uids []= {
+	"dst","src","request","reply","event","error","#dst","#dst_device","#event","#from","#reply","#request","#src","#src_device","Actor","Echo","Logger","Relay","Router","Sonar","Tester","bootTime","clean_session","clientId","client_id","closed"
+	,"connect","connected","connected)","data","disconnect","disconnected","err","error","error_detail","error_msg","event","host","hostname","id","init","keep_alive","line","log","message","method","motor","mqtt","name","now","nr","object","opened","password"
+	,"ping","port","prefix","props","publish","published","qos","register","reply","request","reset","retain","retained","rxd","serial","set","setup","slip","src","state","status","subscribe","sys","system","tcp","tick","time","timeout","topic"
+	,"uint32_t","upTime","user","will_message","will_qos","will_retain","will_topic"
+};
+
 EventBus::EventBus(uint32_t size,uint32_t msgSize) :
 	_queue(size), _firstFilter(0),_txd(msgSize),_rxd(msgSize)
 {
 	timeoutEvent=new Cbor(12);
 	timeoutEvent->addKeyValue(EB_SRC, H("system"));
 	timeoutEvent->addKeyValue(EB_EVENT, H("timeout"));
+}
+
+void EventBus::setup()
+{
 	publish(H("system"),H("setup"));
+	uid.add(eventbus_uids,sizeof(eventbus_uids)/sizeof(const char*));
 }
 
 void EventBus::publish(uid_t header, Cbor& cbor)
@@ -211,7 +223,10 @@ void EventFilter::invokeAllSubscriber(Cbor& cbor)
 //
 void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 {
-	if ( isRequest(actor->id(),H("status"))) {
+	if ( isRequest(actor->id(),H("ping"))) {
+		eb.reply();
+		eb.send();
+	} else if ( isRequest(actor->id(),H("status"))) {
 		eb.reply()
 		.addKeyValue(H("state"),uid.label(actor->_state))
 		.addKeyValue(H("timeout"),actor->_timeout)
@@ -219,7 +234,7 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 		.addKeyValue(H("line"),actor->_ptLine);
 		eb.send();
 	} else if ( isRequest(actor->id(),H("init"))) {
-//		actor->init();
+		actor->init();
 		eb.reply()
 		.addKeyValue(H("state"),uid.label(actor->_state))
 		.addKeyValue(H("timeout"),actor->_timeout)
@@ -327,7 +342,6 @@ bool EventFilter::match(Cbor& cbor)
 //
 bool EventFilter::isRemote(Cbor& cbor)
 {
-	uid_t _src,_event;
 	if (cbor.gotoKey(EB_DST_DEVICE)) {
 		return true;
 	}

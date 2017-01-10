@@ -78,7 +78,8 @@ private:
 
 public:
     EventBus(uint32_t size,uint32_t msgSize);
-    Erc initAll();
+	void setup();
+//    Erc initAll();
     bool match(uint32_t header,uid_t dst,uid_t src,uid_t op);
 
     void publish(uid_t header, Cbor& cbor);

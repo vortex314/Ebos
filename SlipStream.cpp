@@ -7,6 +7,10 @@
 
 #include <SlipStream.h>
 
+const char* slipstream_uid[]={
+	"rxd","txd","data","slip"
+};
+
 SlipStream::SlipStream(int size, ByteStream& stream) :
     Bytes(size), Actor("SlipStream"), _stream(stream)
 {

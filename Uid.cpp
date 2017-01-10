@@ -9,18 +9,12 @@ extern uint32_t static_labels_count;
 Uid::Uid(uint32_t max)
 {
 	_max=max;
+	_maxConst=0;
 	_uids = new uid_t[_max];
 	_labels = new const char*[_max];
-	for(int i=0; i< _max; i++) {
+	for(uint32_t i=0; i< _max; i++) {
 		_uids[i]=0;
 	}
-	ASSERT(max > static_labels_count);
-	for(int i=0; i<static_labels_count ; i++) {
-		_uids[i]=H(static_labels[i]);
-		_labels[i] = static_labels[i];
-	}
-	_dynamic_start = static_labels_count;
-	_dynamic_current = static_labels_count;
 }
 
 Uid::~Uid()
@@ -57,12 +51,13 @@ uid_t Uid::newLabel(Str& str,uid_t uid)
 	if ( _dynamic_current++ == _max) { // overwrite older labels
 		_dynamic_current=_dynamic_start;
 	}
+	return uid;
 }
 
 int Uid::uidIndex(uid_t uid)
 {
 //	LOGF("Uid max : %d static_labels : %d  dynam : %d",_max,static_labels_count,_dynamic_current);
-	for(int i=0; i<_max; i++) {
+	for(uint32_t i=0; i<_max; i++) {
 //		LOGF("%d:%s",_uids[i],_labels[i]);
 		if(_uids[i]==uid) {
 			return i;
@@ -84,3 +79,30 @@ const char* Uid::label(uid_t uid)
 		return uid_str;
 	} else return _labels[index];
 }
+
+
+
+void Uid::add(const char** list,uint32_t max)   /* sizeof(list)/sizeof(char*)*/
+{
+	for(uint32_t i=0; i<max;i++) 
+		add(list[i]);
+}
+
+uid_t Uid::add(const char* s)
+{
+	uid_t uid;
+	// check if exist
+	for(uint32_t i=0; i<_maxConst; i++ ) {
+		if ( strcmp(s,_labels[i])==0) return _uids[i];
+	}
+	LOGF(" adding %s ",s);
+	// else add const char* , hash(s)
+	if ( _maxConst < _max ) {
+		_labels[_maxConst]=s;
+		_uids[_maxConst]=uid=H(s);
+		_maxConst++;
+	}
+	return uid;
+}
+
+

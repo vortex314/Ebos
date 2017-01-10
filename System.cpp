@@ -57,7 +57,13 @@ void System::reset(){
 extern "C" void __real_system_restart_local();
 
 void System::reset()
-{
+{ 
 	__real_system_restart_local();
+}
+#endif
+
+#ifdef LINUX 
+void System::reset(){
+	
 }
 #endif

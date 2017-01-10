@@ -56,6 +56,9 @@ H("state")
  * H("#from")
 
  */
+ 
+#include "ebos_labels.h"
+   
 Router::Router() :
 	Actor("Router"), _topic(30), _message(300), _name(30)
 {
@@ -73,6 +76,7 @@ void Router::setup()
 	        (MethodHandler) &Router::mqttToEb);
 	eb.onEvent(H("mqtt"), H("disconnected")).subscribe(this,
 	        (MethodHandler) &Router::onEvent);
+	uid.add(labels,LABEL_COUNT);
 }
 #define CNT 100
 bool Router::addHeader(Json& json, Cbor& cbor, uid_t key)
@@ -183,7 +187,7 @@ void Router::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 		addTopic(topic, cbor, EB_SRC);
 		addTopic(topic, cbor, EB_EVENT);
 	}
-	Cbor::PackType type;
+//	Cbor::PackType type;
 	//        Cbor::CborVariant variant;
 	cbor.offset(0);
 	uid_t key,value;
@@ -212,7 +216,7 @@ void Router::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 				cbor.skipToken();
 			} else {// default cbor behaviour
 				json.addComma();
-				type = cbor.tokenToString(json);
+				cbor.tokenToString(json);
 			}
 		} else {
 			json.add("expected int key");
