@@ -30,11 +30,17 @@ void System::onEvent(Cbor& msg)
 
 		uint64_t now;
 		Str hostname(20);
+		uint32_t level;
 		if ( msg.getKeyValue(H("now"),now)) {
 			Sys::setNow(now);
-		} else if ( msg.getKeyValue(H("hostname"),hostname)) {
+		};
+		if ( msg.getKeyValue(H("hostname"),hostname)) {
 			Sys::hostname(hostname.c_str());
-		}
+		};
+		if ( msg.getKeyValue(H("log_level"),level) &&  level <7) {
+			Log.level((LogManager::LogLevel)level);
+		};
+
 		eb.reply().addKeyValue(EB_ERROR,E_OK);
 		eb.send();
 

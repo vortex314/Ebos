@@ -32,28 +32,7 @@ Router - events
 -
 - outgoing reply add "dst/"
 - ougoing event add "event/"
- *
- * #define EB_DST H("#dst")
-#define EB_SRC H("#src")
-#define EB_REQUEST H("#request")
-#define EB_REPLY H("#reply")
-#define EB_EVENT H("#event")
-#define EB_ERROR H("error")
-#define EB_REGISTER H("register")
-#define EB_SRC_DEVICE H("#src_device")
-#define EB_DST_DEVICE	H("#dst_device")
-H("state")
- * H("timeout"),
- * H("id")
- * H("line")
- * H("init")
- * H("state")
- * H("timeout")
- * H("id")
- * H("line")
- * H("error_msg")
- * H("Actor")
- * H("#from")
+
 
  */
  
