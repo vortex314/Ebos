@@ -17,6 +17,7 @@ Uid::Uid(uint32_t max)
 		_uids[i]=0;
 	}
 	_dynamic_current=0;
+	_dynamic_start=0;
 }
 
 Uid::~Uid()
@@ -104,6 +105,7 @@ uid_t Uid::add(const char* s)
 		_uids[_maxConst]=uid=H(s);
 		_maxConst++;
 		_dynamic_current=_maxConst;
+		_dynamicStart=_maxConst;
 	}
 	return uid;
 }
