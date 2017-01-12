@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <Sys.h>
+#include <Log.h>
 #include <Cbor.h>
 /*
 template<class T> class LinkedList {

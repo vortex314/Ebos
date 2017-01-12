@@ -9,6 +9,8 @@ typedef void (Actor::*MethodHandler)(Cbor&);
 typedef void (*StaticHandler)(Cbor&);
 #define CALL_MEMBER_FUNC(object,ptrToMember)  ((*object).*(ptrToMember))
 
+typedef Cbor Em;
+
 class Subscriber {
 public:
     Actor* _actor;

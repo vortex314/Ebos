@@ -38,7 +38,7 @@ void System::onEvent(Cbor& msg)
 			Sys::hostname(hostname.c_str());
 		};
 		if ( msg.getKeyValue(H("log_level"),level) &&  level <7) {
-			Log.level((LogManager::LogLevel)level);
+			log.level((Log::LogLevel)level);
 		};
 
 		eb.reply().addKeyValue(EB_ERROR,E_OK);
