@@ -98,14 +98,14 @@ uid_t Uid::add(const char* s)
 	for(uint32_t i=0; i<_maxConst; i++ ) {
 		if ( strcmp(s,_labels[i])==0) return _uids[i];
 	}
-	LOGF(" adding %s ",s);
+//	LOGF(" adding %s ",s);
 	// else add const char* , hash(s)
 	if ( _maxConst < _max ) {
 		_labels[_maxConst]=s;
 		_uids[_maxConst]=uid=H(s);
 		_maxConst++;
 		_dynamic_current=_maxConst;
-		_dynamicStart=_maxConst;
+		_dynamic_start=_maxConst;
 	}
 	return uid;
 }
