@@ -259,16 +259,9 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 void EventBus::eventLoop()
 {
 	while ((_queue.get(_rxd) == 0) ) { // handle all events
-		if ( _rxd.gotoKey(EB_DST_DEVICE ) ) {
-			for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters
-				if ( filter->isRemote(_rxd) )
-					filter->invokeAllSubscriber(_rxd);
-			}
-		} else {
-			for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters
-				if ( filter->match(_rxd))
-					filter->invokeAllSubscriber(_rxd);
-			}
+		for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters
+			if ( filter->match(_rxd))
+				filter->invokeAllSubscriber(_rxd);
 		}
 	}
 
@@ -326,27 +319,19 @@ bool EventFilter::match(Cbor& cbor)
 		return isRequest(cbor,_object,_value);
 	} else if ( _type == EF_KV ) {
 		uid_t v;
-		if ( cbor.getKeyValue(_object,v)) {
-			if ( (_value==v || _value==0 )   )  return true;
-		} else {
-			return false;
-		}
+		if ( cbor.getKeyValue(_object,v) &&  (_value==v || _value==0 )   )
+			return true;
+		return false;
 	} else if ( _type==EF_REMOTE ) {
 		uid_t dst;
-		if ( cbor.getKeyValue(EB_DST_DEVICE,dst) )
+		if ( cbor.getKeyValue(EB_DST_DEVICE,dst) && dst != H(Sys::hostname()))
 			return true;
 	}
 	return false;
 }
 //_______________________________________________________________________________________________
 //
-bool EventFilter::isRemote(Cbor& cbor)
-{
-	if (cbor.gotoKey(EB_DST_DEVICE)) {
-		return true;
-	}
-	return false;
-}
+
 //_______________________________________________________________________________________________
 //
 bool EventFilter::isEvent(Cbor& cbor ,uid_t src,uid_t ev)
