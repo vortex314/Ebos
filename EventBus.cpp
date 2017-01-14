@@ -228,6 +228,8 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 		eb.send();
 	} else if ( isRequest(actor->id(),H("status"))) {
 		eb.reply()
+        .addKeyValue(H("error"),0)
+        .addKeyValue(H("name"),actor->_name)
 		.addKeyValue(H("state"),uid.label(actor->_state))
 		.addKeyValue(H("timeout"),actor->_timeout)
 		.addKeyValue(H("id"),actor->_id)
@@ -236,9 +238,6 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 	} else if ( isRequest(actor->id(),H("init"))) {
 		actor->init();
 		eb.reply()
-		.addKeyValue(H("state"),uid.label(actor->_state))
-		.addKeyValue(H("timeout"),actor->_timeout)
-		.addKeyValue(H("id"),actor->_id)
 		.addKeyValue(H("line"),actor->_ptLine);
 		eb.send();
 	} else {

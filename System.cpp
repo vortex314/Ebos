@@ -23,7 +23,9 @@ void System::onEvent(Cbor& msg)
 		eb.reply()
 		.addKeyValue(H("hostname"),Sys::hostname())
 		.addKeyValue(H("upTime"),Sys::millis())
-		.addKeyValue(H("bootTime"),Sys::now()-Sys::millis());
+		.addKeyValue(H("bootTime"),Sys::now()-Sys::millis())
+        .addKeyValue(H("chip_id"),ESP.getChipId())
+		.addKeyValue(H("heap"), ESP.getFreeHeap());
 		eb.send();
 
 	} else if (eb.isRequest(H("set"))) {
@@ -38,7 +40,7 @@ void System::onEvent(Cbor& msg)
 			Sys::hostname(hostname.c_str());
 		};
 		if ( msg.getKeyValue(H("log_level"),level) &&  level <7) {
-			log.level((Log::LogLevel)level);
+			logger.level((Log::LogLevel)level);
 		};
 
 		eb.reply().addKeyValue(EB_ERROR,E_OK);
@@ -63,13 +65,13 @@ void System::reset(){
 extern "C" void __real_system_restart_local();
 
 void System::reset()
-{ 
+{
 	__real_system_restart_local();
 }
 #endif
 
-#ifdef LINUX 
+#ifdef LINUX
 void System::reset(){
-	
+
 }
 #endif

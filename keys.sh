@@ -16,3 +16,4 @@ cat >>$OUTPUT <<EOF
 };
 #define LABEL_COUNT (sizeof(labels)/sizeof(const char*))
 EOF
+echo "labels created in $OUTPUT"

@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-extern char* static_labels[];
-extern uint32_t static_labels_count;
 
 Uid::Uid(uint32_t max)
 {
@@ -76,6 +74,7 @@ char uid_str[20];
 
 const char* Uid::label(uid_t uid)
 {
+    if ( uid==0 ) return "0";
 	int index = uidIndex(uid);
 	if ( index < 0 ) {
 		sprintf(uid_str,"%d",uid);
