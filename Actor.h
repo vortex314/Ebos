@@ -134,7 +134,7 @@ public:
     }
     bool timeout()
     {
-        return Sys::millis() > _timeout;
+        return Sys::millis() >= _timeout;
     }
     static uint64_t lowestTimeout();
 

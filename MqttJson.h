@@ -5,8 +5,8 @@
  *      Author: lieven2
  */
 
-#ifndef ROUTER_H_
-#define ROUTER_H_
+#ifndef MQTT_JSON_H_
+#define MQTT_JSON_H_
 
 #include <Json.h>
 #include <Cbor.h>
@@ -21,9 +21,10 @@ class MqttJson: public Actor {
 	Json _message;
 	Actor* _actor;
 	Str _name;
+        uid_t _mqttId;
 
 public:
-	MqttJson();
+	MqttJson(const char* name);
 	void setup();
 	void init(){};
 	bool addHeader(Json& json, Cbor& cbor, uint16_t key);
@@ -35,6 +36,8 @@ public:
 	void onEvent(Cbor& msg);
 	void ebToMqtt(Cbor& msg);
 	void mqttToEb(Cbor& msg);
+    void setMqttId(uid_t mqttId);
+        int fd();
 };
 
-#endif /* ROUTER_H_ */
+#endif /* MQTT_JSON_H_ */

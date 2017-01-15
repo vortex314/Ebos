@@ -5,16 +5,16 @@
 ## Debug
 ProjectName            :=Ebos
 ConfigurationName      :=Debug
-WorkspacePath          := "/home/lieven/linux"
-ProjectPath            := "/home/lieven/linux/Ebos"
+WorkspacePath          :=/home/lieven/workspace
+ProjectPath            :=/home/lieven/workspace/Ebos
 IntermediateDirectory  :=./Debug
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Lieven
-Date                   :=13/01/17
-CodeLitePath           :="/home/lieven/.codelite"
+Date                   :=15/01/17
+CodeLitePath           :=/home/lieven/.codelite
 LinkerName             :=/usr/bin/g++
 SharedObjectLinkerName :=/usr/bin/g++ -shared -fPIC
 ObjectSuffix           :=.o
@@ -60,7 +60,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) $(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) $(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) $(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) $(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) $(IntermediateDirectory)/Router.cpp$(ObjectSuffix) $(IntermediateDirectory)/System.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) $(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) $(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) $(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) $(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) $(IntermediateDirectory)/System.cpp$(ObjectSuffix) $(IntermediateDirectory)/MqttCbor.cpp$(ObjectSuffix) $(IntermediateDirectory)/MqttJson.cpp$(ObjectSuffix) 
 
 
 
@@ -77,8 +77,8 @@ $(OutputFile): $(Objects)
 	@echo "" > $(IntermediateDirectory)/.d
 	@echo $(Objects0)  > $(ObjectsFileList)
 	$(AR) $(ArchiveOutputSwitch)$(OutputFile) @$(ObjectsFileList) $(ArLibs)
-	@$(MakeDirCommand) "/home/lieven/linux/.build-debug"
-	@echo rebuilt > "/home/lieven/linux/.build-debug/Ebos"
+	@$(MakeDirCommand) "/home/lieven/workspace/.build-debug"
+	@echo rebuilt > "/home/lieven/workspace/.build-debug/Ebos"
 
 MakeIntermediateDirs:
 	@test -d ./Debug || $(MakeDirCommand) ./Debug
@@ -94,60 +94,68 @@ PreBuild:
 ## Objects
 ##
 $(IntermediateDirectory)/Slip.cpp$(ObjectSuffix): Slip.cpp $(IntermediateDirectory)/Slip.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/Slip.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/Slip.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/Slip.cpp$(DependSuffix): Slip.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Slip.cpp$(DependSuffix) -MM "Slip.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Slip.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Slip.cpp$(DependSuffix) -MM Slip.cpp
 
 $(IntermediateDirectory)/Slip.cpp$(PreprocessSuffix): Slip.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Slip.cpp$(PreprocessSuffix) "Slip.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Slip.cpp$(PreprocessSuffix)Slip.cpp
 
 $(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix): SlipStream.cpp $(IntermediateDirectory)/SlipStream.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/SlipStream.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/SlipStream.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/SlipStream.cpp$(DependSuffix): SlipStream.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/SlipStream.cpp$(DependSuffix) -MM "SlipStream.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/SlipStream.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/SlipStream.cpp$(DependSuffix) -MM SlipStream.cpp
 
 $(IntermediateDirectory)/SlipStream.cpp$(PreprocessSuffix): SlipStream.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/SlipStream.cpp$(PreprocessSuffix) "SlipStream.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/SlipStream.cpp$(PreprocessSuffix)SlipStream.cpp
 
 $(IntermediateDirectory)/Uid.cpp$(ObjectSuffix): Uid.cpp $(IntermediateDirectory)/Uid.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/Uid.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/Uid.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/Uid.cpp$(DependSuffix): Uid.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Uid.cpp$(DependSuffix) -MM "Uid.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Uid.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Uid.cpp$(DependSuffix) -MM Uid.cpp
 
 $(IntermediateDirectory)/Uid.cpp$(PreprocessSuffix): Uid.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Uid.cpp$(PreprocessSuffix) "Uid.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Uid.cpp$(PreprocessSuffix)Uid.cpp
 
 $(IntermediateDirectory)/Actor.cpp$(ObjectSuffix): Actor.cpp $(IntermediateDirectory)/Actor.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/Actor.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/Actor.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/Actor.cpp$(DependSuffix): Actor.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Actor.cpp$(DependSuffix) -MM "Actor.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Actor.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Actor.cpp$(DependSuffix) -MM Actor.cpp
 
 $(IntermediateDirectory)/Actor.cpp$(PreprocessSuffix): Actor.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Actor.cpp$(PreprocessSuffix) "Actor.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Actor.cpp$(PreprocessSuffix)Actor.cpp
 
 $(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix): EventBus.cpp $(IntermediateDirectory)/EventBus.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/EventBus.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/EventBus.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/EventBus.cpp$(DependSuffix): EventBus.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/EventBus.cpp$(DependSuffix) -MM "EventBus.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/EventBus.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/EventBus.cpp$(DependSuffix) -MM EventBus.cpp
 
 $(IntermediateDirectory)/EventBus.cpp$(PreprocessSuffix): EventBus.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/EventBus.cpp$(PreprocessSuffix) "EventBus.cpp"
-
-$(IntermediateDirectory)/Router.cpp$(ObjectSuffix): Router.cpp $(IntermediateDirectory)/Router.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/Router.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/Router.cpp$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/Router.cpp$(DependSuffix): Router.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/Router.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/Router.cpp$(DependSuffix) -MM "Router.cpp"
-
-$(IntermediateDirectory)/Router.cpp$(PreprocessSuffix): Router.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/Router.cpp$(PreprocessSuffix) "Router.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/EventBus.cpp$(PreprocessSuffix)EventBus.cpp
 
 $(IntermediateDirectory)/System.cpp$(ObjectSuffix): System.cpp $(IntermediateDirectory)/System.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/linux/Ebos/System.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/System.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/System.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/System.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/System.cpp$(DependSuffix): System.cpp
-	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/System.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/System.cpp$(DependSuffix) -MM "System.cpp"
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/System.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/System.cpp$(DependSuffix) -MM System.cpp
 
 $(IntermediateDirectory)/System.cpp$(PreprocessSuffix): System.cpp
-	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/System.cpp$(PreprocessSuffix) "System.cpp"
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/System.cpp$(PreprocessSuffix)System.cpp
+
+$(IntermediateDirectory)/MqttCbor.cpp$(ObjectSuffix): MqttCbor.cpp $(IntermediateDirectory)/MqttCbor.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/MqttCbor.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/MqttCbor.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/MqttCbor.cpp$(DependSuffix): MqttCbor.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/MqttCbor.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/MqttCbor.cpp$(DependSuffix) -MM MqttCbor.cpp
+
+$(IntermediateDirectory)/MqttCbor.cpp$(PreprocessSuffix): MqttCbor.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/MqttCbor.cpp$(PreprocessSuffix)MqttCbor.cpp
+
+$(IntermediateDirectory)/MqttJson.cpp$(ObjectSuffix): MqttJson.cpp $(IntermediateDirectory)/MqttJson.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/lieven/workspace/Ebos/MqttJson.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/MqttJson.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/MqttJson.cpp$(DependSuffix): MqttJson.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/MqttJson.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/MqttJson.cpp$(DependSuffix) -MM MqttJson.cpp
+
+$(IntermediateDirectory)/MqttJson.cpp$(PreprocessSuffix): MqttJson.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/MqttJson.cpp$(PreprocessSuffix)MqttJson.cpp
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)

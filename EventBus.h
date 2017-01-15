@@ -77,6 +77,8 @@ private:
 
     Cbor _txd;
     Cbor _rxd;
+    
+    bool isHeader(uid_t id);
 
 public:
     EventBus(uint32_t size,uint32_t msgSize);

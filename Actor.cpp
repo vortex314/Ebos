@@ -30,6 +30,8 @@ Actor::Actor(const char* name) {
 void Actor::setName(const char* name) {
 	_id = H(name);
 	_name = name;
+    uid.add(name);
+    LOGF(" new Actor %s  [%d]",_name,_id);
 }
 
 /*Actor::Actor(uint16_t id) {
