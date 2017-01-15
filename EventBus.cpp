@@ -255,6 +255,32 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 //____________________________________________________________________
 //
 
+void EventBus::log(Str& str,Cbor& cbor)
+{
+    cbor.offset(0);
+    uid_t key,value;
+    str.clear();
+    Cbor::PackType ct;
+    cbor.offset(0);
+    while (cbor.hasData()) {
+        cbor.get(key);
+        const char* label = uid.label(key);
+        str.append("(").append(label).append(":");
+        if (label[0]=='#' ) {
+            cbor.get(value);
+            str.append("").append(uid.label(value));
+        } else {
+            ct = cbor.tokenToString(str);
+            if (ct == Cbor::P_BREAK || ct == Cbor::P_ERROR)
+                break;
+        }
+        str.append(")");
+        if (cbor.hasData())
+            str << ",";
+    };
+}
+//____________________________________________________________________
+//
 void EventBus::eventLoop()
 {
 	while ((_queue.get(_rxd) == 0) ) { // handle all events

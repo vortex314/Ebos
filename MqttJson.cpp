@@ -6,7 +6,7 @@
  */
 /*#include <LinkedList.h>
 #include <LinkedList.cpp>*/
-#include <Router.h>
+#include <MqttJson.h>
 #include <malloc.h>
 
 
@@ -38,27 +38,27 @@ Router - events
  
 #include "ebos_labels.h"
    
-Router::Router() :
+MqttJson::MqttJson() :
 	Actor("Router"), _topic(30), _message(300), _name(30)
 {
 	_actor = 0;
 }
 
-void Router::setup()
+void MqttJson::setup()
 {
 	timeout(20000);
 	eb.onDst(id()).subscribe(this);
-	eb.onRemote().subscribe(this, (MethodHandler) &Router::ebToMqtt);
+	eb.onRemote().subscribe(this, (MethodHandler) &MqttJson::ebToMqtt);
 //	eb.onEvent(H("Relay"), 0).subscribe(this,
 //	                                    (MethodHandler) &Router::ebToMqtt);
 	eb.onEvent(H("mqtt"), H("published")).subscribe(this,
-	        (MethodHandler) &Router::mqttToEb);
+	        (MethodHandler) &MqttJson::mqttToEb);
 	eb.onEvent(H("mqtt"), H("disconnected")).subscribe(this,
-	        (MethodHandler) &Router::onEvent);
+	        (MethodHandler) &MqttJson::onEvent);
 	uid.add(labels,LABEL_COUNT);
 }
 #define CNT 100
-bool Router::addHeader(Json& json, Cbor& cbor, uid_t key)
+bool MqttJson::addHeader(Json& json, Cbor& cbor, uid_t key)
 {
 	uid_t v;
 	if (cbor.getKeyValue(key, v)) {
@@ -69,7 +69,7 @@ bool Router::addHeader(Json& json, Cbor& cbor, uid_t key)
 	return false;
 }
 
-bool Router::addTopic(Str& topic, Cbor& cbor, uid_t key)
+bool MqttJson::addTopic(Str& topic, Cbor& cbor, uid_t key)
 {
 	uid_t v;
 	if (cbor.getKeyValue(key, v)) {
@@ -85,14 +85,14 @@ bool Router::addTopic(Str& topic, Cbor& cbor, uid_t key)
 	return false;
 }
 
-bool Router::isHeaderField(uid_t key)
+bool MqttJson::isHeaderField(uid_t key)
 {
 	if (key == EB_SRC || key == EB_DST || key == EB_REQUEST || key == EB_REPLY
 	    || key == EB_EVENT)
 		return true;
 	return false;
 }
-int Router::nextHash(Str& str)
+int MqttJson::nextHash(Str& str)
 {
 	Str field(30);
 	while (str.hasData()) {
@@ -107,7 +107,7 @@ int Router::nextHash(Str& str)
 	return hsh;
 }
 
-void Router::jsonToCbor(Cbor& cbor, Json& json)
+void MqttJson::jsonToCbor(Cbor& cbor, Json& json)
 {
 	if (json.parse() != E_OK) {
 		WARN(" invalid JSON ");
@@ -151,7 +151,7 @@ void Router::jsonToCbor(Cbor& cbor, Json& json)
 }
 //__________________________________________________________________________________________________
 //
-void Router::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
+void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 {
 	topic.clear();
 	json.clear();
@@ -206,7 +206,7 @@ void Router::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 }
 //__________________________________________________________________________________________________
 //
-void Router::onEvent(Cbor& msg)
+void MqttJson::onEvent(Cbor& msg)
 {
 	Str willTopic(30);
 	PT_BEGIN()
@@ -285,7 +285,7 @@ SLEEPING: {
 	PT_END()
 	;
 }
-void Router::ebToMqtt(Cbor& msg)
+void MqttJson::ebToMqtt(Cbor& msg)
 {
 	uid_t dst;
 	if (msg.getKeyValue(EB_DST, dst) && dst == H("mqtt"))
@@ -297,7 +297,7 @@ void Router::ebToMqtt(Cbor& msg)
 	eb.send();
 }
 
-void Router::mqttToEb(Cbor& msg)
+void MqttJson::mqttToEb(Cbor& msg)
 {
 	if (msg.getKeyValue(H("topic"), _topic)
 	    && msg.getKeyValue(H("message"), (Bytes&) _message)) {

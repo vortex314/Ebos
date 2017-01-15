@@ -38,13 +38,16 @@
     <File Name="Actor.h"/>
     <File Name="EventBus.cpp"/>
     <File Name="EventBus.h"/>
-    <File Name="Router.cpp"/>
-    <File Name="Router.h"/>
     <File Name="System.cpp"/>
     <File Name="System.h"/>
     <File Name="Slip.h"/>
     <File Name="SlipStream.h"/>
     <File Name="Uid.h"/>
+    <File Name="MqttCbor.cpp"/>
+    <File Name="MqttCbor.h"/>
+    <File Name="ebos_labels.h"/>
+    <File Name="MqttJson.cpp"/>
+    <File Name="MqttJson.h"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>
