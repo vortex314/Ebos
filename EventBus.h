@@ -78,7 +78,6 @@ private:
     Cbor _txd;
     Cbor _rxd;
     
-    bool isHeader(uid_t id);
 
 public:
     EventBus(uint32_t size,uint32_t msgSize);
@@ -116,6 +115,7 @@ public:
 	bool isRequest(uid_t req);
     bool isReply(uid_t src,uid_t req);
     bool isReplyCorrect(uid_t src,uid_t req);
+    bool isHeader(uid_t id);
     void send();
 };
 

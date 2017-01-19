@@ -152,7 +152,7 @@ EventFilter& EventBus::onRemote()
     return addFilter(EventFilter::EF_REMOTE,0,0);
 
 }
-//_______________________________________________________________________________________________
+//__________________________________log_____________________________________________________________
 //
 EventFilter& EventBus::onSrc(uid_t src)
 {
@@ -190,8 +190,9 @@ bool EventBus::isRequest(uid_t req)
     return EventFilter::isRequest(_rxd,(uid_t)0,req);
 }
 
-bool EventBus::isHeader(uid_t id){
-    return id==EB_REQUEST || id==EB_REPLY || id==EB_DST || id==EB_SRC || id==EB_EVENT;
+bool EventBus::isHeader(uid_t id)
+{
+    return id==EB_REQUEST || id==EB_REPLY || id==EB_DST || id==EB_SRC || id==EB_EVENT || id==EB_SRC_DEVICE  || id==EB_DST_DEVICE;
 }
 
 
@@ -271,11 +272,11 @@ void EventBus::log(Str& str,Cbor& cbor)
     cbor.getKeyValue(EB_DST,dst);
     cbor.getKeyValue(EB_SRC,src);
     if ( cbor.getKeyValue(EB_REQUEST,op) ) {
-        str.append(uid.label(src)).append(" = ").append(uid.label(op)).append(" > ").append(uid.label(dst));
+        str.append(uid.label(src)).append("---").append(uid.label(op)).append("-->").append(uid.label(dst));
     } else if (  cbor.getKeyValue(EB_REPLY ,op)) {
-        str.append(uid.label(dst)).append(" < ").append(uid.label(op)).append(" = ").append(uid.label(src));
+        str.append(uid.label(dst)).append("<--").append(uid.label(op)).append("---").append(uid.label(src));
     } else if (cbor.getKeyValue(EB_EVENT ,op)) {
-        str.append(uid.label(src)).append("   ").append(uid.label(op)).append(" >> ");
+        str.append(uid.label(src)).append("---").append(uid.label(op)).append(" >> ");
     }
     cbor.offset(0);
 
