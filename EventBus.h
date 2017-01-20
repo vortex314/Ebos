@@ -109,6 +109,7 @@ public:
     Cbor& reply();
     Cbor& event(uid_t src,uid_t ev);
 	Cbor& empty();
+    Cbor& clear();
     void defaultHandler(Actor* actor,Cbor& msg);
     // Cbor& data();                  //  eb.request(H("mqtt"),H("connect"),H("motor")).addKeyValue(H("host"),"test.mosquitto.org");eb.send(); eb.
     bool isEvent(uid_t ev,uid_t src);

@@ -45,6 +45,12 @@ Cbor& EventBus::empty()
     return _txd;
 }
 
+Cbor& EventBus::clear()
+{
+    _txd.clear();
+    return _txd;
+}
+
 Cbor& EventBus::event(uid_t src, uid_t event)
 {
     empty();
