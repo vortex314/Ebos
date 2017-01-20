@@ -172,7 +172,12 @@ void MqttJson::mqttToEb(Cbor& msg)
                 Cbor& cbor = eb.empty();
                 cbor.addKeyValue(EB_DST_DEVICE,field[1]);
                 cbor.addKeyValue(EB_DST,field[2]);
-                cbor.addKeyValue(field[0],field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
+                if ( field[0]==H("request"))
+                    cbor.addKeyValue(EB_REQUEST,field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
+                else if ( field[0]==H("reply"))
+                    cbor.addKeyValue(EB_REPLY,field[3]);
+                else if ( field[0]==H("event"))
+                    cbor.addKeyValue(EB_EVENT,field[3]);
                 jsonToCbor(cbor, _message);
                 eb.send();
             } else {
@@ -371,6 +376,3 @@ SLEEPING: {
     PT_END()
     ;
 }
-
-
-
