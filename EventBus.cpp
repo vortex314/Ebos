@@ -73,7 +73,7 @@ Cbor& EventBus::reply(uid_t dst,uid_t repl,uid_t src)
 Cbor& EventBus::reply()
 {
     empty();
-    uid_t dst,src,repl;
+    uid_t dst,src,repl,id;
     if ( _rxd.getKeyValue(EB_SRC,dst))
         _txd.addKeyValue(EB_DST,dst);
     if ( _rxd.getKeyValue(EB_REQUEST,repl))
@@ -82,6 +82,8 @@ Cbor& EventBus::reply()
         _txd.addKeyValue(EB_SRC,src);
     if ( _rxd.getKeyValue(EB_SRC_DEVICE,src))
         _txd.addKeyValue(EB_DST_DEVICE,src);
+    if ( _rxd.getKeyValue(EB_ID,id))
+        _txd.addKeyValue(EB_ID,id);
     return _txd;
 }
 

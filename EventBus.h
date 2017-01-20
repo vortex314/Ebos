@@ -62,6 +62,7 @@ public:
 #define EB_REGISTER H("register")
 #define EB_SRC_DEVICE H("#src_device")
 #define EB_DST_DEVICE	H("#dst_device")
+#define EB_ID H("id")
 
 class EventBus {
 private:
