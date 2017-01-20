@@ -154,6 +154,40 @@ void MqttJson::jsonToCbor(Cbor& cbor, Json& json)
         WARN(" no JSON OBject found ");
     }
 }
+//------------------------------------------------------------------------------------------------
+//
+void MqttJson::mqttToEb(Cbor& msg)
+{
+    if (msg.getKeyValue(H("topic"), _topic)
+        && msg.getKeyValue(H("message"), (Bytes&) _message)) {
+        uid_t field[4]= {0,0,0,0};
+        int i = 0;
+        uid_t v;
+        _topic.offset(0);
+        while ((v = nextHash(_topic)) && i < 4) {
+            field[i++] = v;
+        }
+        if ( field[1]==H(Sys::hostname())) {	// check device
+            if ( Actor::findById(field[2])) {	// check actor
+                Cbor& cbor = eb.empty();
+                cbor.addKeyValue(EB_DST_DEVICE,field[1]);
+                cbor.addKeyValue(EB_DST,field[2]);
+                cbor.addKeyValue(field[0],field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
+                jsonToCbor(cbor, _message);
+                eb.send();
+            } else {
+                WARN(" wrong actor ");
+            }
+        } else {
+            WARN(" wrong device ");	//TODO could try CBOR
+        }
+    } else {
+        WARN(" wrong mqtt layout ");
+    }
+}
+
+
+
 //__________________________________________________________________________________________________
 //
 void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
@@ -227,6 +261,19 @@ void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
     }
     json.addBreak();
 
+}
+//--------------------------------------------------------------------------------------------------
+//
+void MqttJson::ebToMqtt(Cbor& msg)
+{
+    uid_t dst;
+    if (msg.getKeyValue(EB_DST, dst) && dst == H("mqtt"))
+        return;
+    cborToMqtt(_topic, _message, msg);
+
+    eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(
+        H("message"), _message);
+    eb.send();
 }
 //__________________________________________________________________________________________________
 //
@@ -324,44 +371,6 @@ SLEEPING: {
     PT_END()
     ;
 }
-void MqttJson::ebToMqtt(Cbor& msg)
-{
-    uid_t dst;
-    if (msg.getKeyValue(EB_DST, dst) && dst == H("mqtt"))
-        return;
-    cborToMqtt(_topic, _message, msg);
 
-    eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(
-        H("message"), _message);
-    eb.send();
-}
 
-void MqttJson::mqttToEb(Cbor& msg)
-{
-    if (msg.getKeyValue(H("topic"), _topic)
-        && msg.getKeyValue(H("message"), (Bytes&) _message)) {
-        uid_t field[4]= {0,0,0,0};
-        int i = 0;
-        uid_t v;
-        _topic.offset(0);
-        while ((v = nextHash(_topic)) && i < 4) {
-            field[i++] = v;
-        }
-        if ( field[1]==H(Sys::hostname())) {	// check device
-            if ( Actor::findById(field[2])) {	// check actor
-                Cbor& cbor = eb.empty();
-                cbor.addKeyValue(EB_DST_DEVICE,field[1]);
-                cbor.addKeyValue(EB_DST,field[2]);
-                cbor.addKeyValue(field[0],field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
-                jsonToCbor(cbor, _message);
-                eb.send();
-            } else {
-                WARN(" wrong actor ");
-            }
-        } else {
-            WARN(" wrong device ");	//TODO could try CBOR
-        }
-    } else {
-        WARN(" wrong mqtt layout ");
-    }
-}
+
