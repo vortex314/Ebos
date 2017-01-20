@@ -298,27 +298,27 @@ SUBSCRIBE_REPLY: {
     }
 SLEEPING: {
         while (true) {
-            for (_actor = Actor::first(); _actor; _actor = _actor->next()) {
-                _name = _actor->name();
-                _topic = "event/";
-                _topic += Sys::hostname();
-                _topic += "/";
-                _topic += _name;
-                _topic += "/alive";
-                _message.clear();
-                _message.add(true);
-                eb.request(_mqttId, H("publish"), id()).addKeyValue(
-                    H("topic"), _topic).addKeyValue(H("message"), _message);
-                eb.send();
-                timeout(2000);
+//            for (_actor = Actor::first(); _actor; _actor = _actor->next()) {
+//            _name = _actor->name();
+            _topic = "event/";
+            _topic += Sys::hostname();
+            _topic += "/";
+            _topic += "system";
+            _topic += "/alive";
+            _message.clear();
+            _message.add(true);
+            eb.request(_mqttId, H("publish"), id()).addKeyValue(
+                H("topic"), _topic).addKeyValue(H("message"), _message);
+            eb.send();
+            timeout(2000);
 
-                PT_YIELD_UNTIL( eb.isReplyCorrect(_mqttId, H("publish")) || timeout());
-                if (timeout())
-                    goto DISCONNECTING;
-                timeout(10000);
+            PT_YIELD_UNTIL( eb.isReplyCorrect(_mqttId, H("publish")) || timeout());
+            if (timeout())
+                goto DISCONNECTING;
+            timeout(10000);
 
-                PT_YIELD_UNTIL(timeout());
-            }
+            PT_YIELD_UNTIL(timeout());
+//            }
         }
     }
     PT_END()
@@ -350,8 +350,9 @@ void MqttJson::mqttToEb(Cbor& msg)
         if ( field[1]==H(Sys::hostname())) {	// check device
             if ( Actor::findById(field[2])) {	// check actor
                 Cbor& cbor = eb.empty();
+                cbor.addKeyValue(EB_DST_DEVICE,field[1]);
                 cbor.addKeyValue(EB_DST,field[2]);
-                cbor.addKeyValue(EB_REQUEST,field[3]);
+                cbor.addKeyValue(field[0],field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
                 jsonToCbor(cbor, _message);
                 eb.send();
             } else {
