@@ -151,6 +151,9 @@ public:
     {
         return _id;
     }
+    inline uint16_t me(){
+        return _id;
+    }
     inline void id(uint16_t id)
     {
         _id=id;

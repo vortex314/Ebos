@@ -10,7 +10,7 @@ const char* eventbus_uids []= {
 };
 
 EventBus::EventBus(uint32_t size,uint32_t msgSize) :
-    _queue(size), _firstFilter(0),_txd(msgSize),_rxd(msgSize)
+    _queue(size), _firstFilter(0),_txd(msgSize),_rxd(msgSize),_id(0)
 {
     timeoutEvent=new Cbor(12);
     timeoutEvent->addKeyValue(EB_SRC, H("system"));
@@ -56,6 +56,18 @@ Cbor& EventBus::event(uid_t src, uid_t event)
     empty();
     _txd.addKeyValue(EB_SRC,src);
     _txd.addKeyValue(EB_EVENT,event);
+    _txd.addKeyValue(EB_ID,_id++);
+    return _txd;
+}
+
+Cbor& EventBus::requestRemote(uid_t dev,uid_t dst,uid_t req,uid_t src)
+{
+    empty();
+    _txd.addKeyValue(EB_DST_DEVICE,dev);
+    _txd.addKeyValue(EB_DST,dst);
+    _txd.addKeyValue(EB_REQUEST,req);
+    _txd.addKeyValue(EB_SRC,src);
+    _txd.addKeyValue(EB_ID,_id++);
     return _txd;
 }
 
@@ -65,6 +77,7 @@ Cbor& EventBus::request(uid_t dst,uid_t req,uid_t src)
     _txd.addKeyValue(EB_DST,dst);
     _txd.addKeyValue(EB_REQUEST,req);
     _txd.addKeyValue(EB_SRC,src);
+    _txd.addKeyValue(EB_ID,_id++);
     return _txd;
 }
 Cbor& EventBus::reply(uid_t dst,uid_t repl,uid_t src)
@@ -160,6 +173,20 @@ EventFilter& EventBus::onRemote()
     return addFilter(EventFilter::EF_REMOTE,0,0);
 
 }
+//_______________________________________________________________________________________________
+//
+EventFilter& EventBus::onRemoteSrc(uid_t src_dev,uid_t src)
+{
+    return addFilter(EventFilter::EF_REMOTE_SRC,src_dev,src);
+
+}
+//_______________________________________________________________________________________________
+//
+EventFilter& EventBus::onRemoteDst(uid_t dst_dev,uid_t dst)
+{
+    return addFilter(EventFilter::EF_REMOTE_DST,dst_dev,dst);
+
+}
 //__________________________________log_____________________________________________________________
 //
 EventFilter& EventBus::onSrc(uid_t src)
@@ -237,7 +264,8 @@ void EventFilter::invokeAllSubscriber(Cbor& cbor)
 void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 {
     if ( isRequest(actor->id(),H("ping"))) {
-        eb.reply();
+        eb.reply()
+            .addKeyValue(H("error"),E_OK);
         eb.send();
     } else if ( isRequest(actor->id(),H("status"))) {
         eb.reply()
@@ -408,7 +436,15 @@ bool EventFilter::match(Cbor& cbor)
         uid_t dst;
         if ( cbor.getKeyValue(EB_DST_DEVICE,dst) && dst != H(Sys::hostname()))
             return true;
-    }
+    } else if ( _type==EF_REMOTE_DST ) {
+        uid_t dst_dev,dst;
+        if ( cbor.getKeyValue(EB_DST_DEVICE,dst_dev) && dst_dev == _object &&  cbor.getKeyValue(EB_DST,dst) && dst == _value)
+            return true;
+        } else if ( _type==EF_REMOTE_SRC ) {
+        uid_t src_dev,src;
+        if ( cbor.getKeyValue(EB_SRC_DEVICE,src_dev) && src_dev == _object &&  cbor.getKeyValue(EB_SRC,src) && src == _value)
+            return true;
+        }
     return false;
 }
 //_______________________________________________________________________________________________
@@ -416,7 +452,7 @@ bool EventFilter::match(Cbor& cbor)
 
 //_______________________________________________________________________________________________
 //
-bool EventFilter::isEvent(Cbor& cbor ,uid_t src,uid_t ev)
+       bool EventFilter::isEvent(Cbor& cbor ,uid_t src,uid_t ev)
 {
     uid_t _src,_event;
     if (cbor.getKeyValue(EB_EVENT,_event) && cbor.getKeyValue(EB_SRC,_src)) {

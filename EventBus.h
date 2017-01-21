@@ -26,7 +26,7 @@ public:
 class EventFilter {
 
 public:
-    typedef enum  { EF_ANY,EF_REQUEST,EF_EVENT,EF_REPLY,EF_KV,EF_REMOTE } type;
+    typedef enum  { EF_ANY,EF_REQUEST,EF_EVENT,EF_REPLY,EF_KV,EF_REMOTE,EF_REMOTE_SRC,EF_REMOTE_DST } type;
     type _type;
     uid_t _object;
     uid_t _value;
@@ -78,6 +78,7 @@ private:
 
     Cbor _txd;
     Cbor _rxd;
+    uint16_t _id;
     
 
 public:
@@ -100,11 +101,14 @@ public:
     EventFilter& onDst(uid_t dst);
     EventFilter& onSrc(uid_t src);
     EventFilter& onRemote();
+    EventFilter& onRemoteSrc(uid_t src_dev,uid_t src);
+    EventFilter& onRemoteDst(uid_t dst_dev,uid_t dst);
 
     void eventLoop();
 //   EventFilter* findFilter(EventFilter::type ,uid_t o,uid_t v);
 
     Cbor& request(uid_t dst,uid_t req,uid_t src);
+    Cbor& requestRemote(uid_t dev,uid_t dst,uid_t req,uid_t src);
     Cbor& reply(uid_t dst,uid_t repl,uid_t src);
     Cbor& reply();
     Cbor& event(uid_t src,uid_t ev);
