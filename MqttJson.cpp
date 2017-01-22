@@ -48,7 +48,7 @@ void MqttJson::setMqttId(uid_t mqttId)
 {
     _mqttId=mqttId;
 }
-
+//----------------------------------------------------------------------------------
 void MqttJson::setup()
 {
     timeout(1);
@@ -62,6 +62,8 @@ void MqttJson::setup()
             (MethodHandler) &MqttJson::onEvent);
     uid.add(labels,LABEL_COUNT);
 }
+//----------------------------------------------------------------------------------
+
 #define CNT 100
 bool MqttJson::addHeader(Json& json, Cbor& cbor, uid_t key)
 {
@@ -73,6 +75,7 @@ bool MqttJson::addHeader(Json& json, Cbor& cbor, uid_t key)
     }
     return false;
 }
+//----------------------------------------------------------------------------------
 
 bool MqttJson::addTopic(Str& topic, Cbor& cbor, uid_t key)
 {
@@ -89,6 +92,7 @@ bool MqttJson::addTopic(Str& topic, Cbor& cbor, uid_t key)
     }
     return false;
 }
+//----------------------------------------------------------------------------------
 
 bool MqttJson::isHeaderField(uid_t key)
 {
@@ -97,6 +101,8 @@ bool MqttJson::isHeaderField(uid_t key)
         return true;
     return false;
 }
+//----------------------------------------------------------------------------------
+
 int MqttJson::nextHash(Str& str)
 {
     Str field(30);
@@ -109,8 +115,10 @@ int MqttJson::nextHash(Str& str)
     if (field.length() == 0)
         return 0;
     uid_t hsh = uid.hash(field);	// generates new label if necessary
+//    LOGF(" %s : %d %d",field.c_str(),hsh,H("event"));
     return hsh;
 }
+//----------------------------------------------------------------------------------
 
 void MqttJson::jsonToCbor(Cbor& cbor, Json& json)
 {
@@ -167,8 +175,8 @@ void MqttJson::mqttToEb(Cbor& msg)
         while ((v = nextHash(_topic)) && i < 4) {
             field[i++] = v;
         }
-        if ( field[1]==H(Sys::hostname())) {	// check device
-            if ( Actor::findById(field[2])) {	// check actor
+        if ( field[1]==H(Sys::hostname()) || ( field[0]==H("event")) ) {	// check device, request ,reply cannot be remote dest, event can
+            if ( Actor::findById(field[2]) || ( field[0]==H("event")) ) {	// check actor
                 Cbor& cbor = eb.empty();
                 cbor.addKeyValue(EB_DST_DEVICE,field[1]);
                 cbor.addKeyValue(EB_DST,field[2]);
@@ -232,7 +240,7 @@ void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
     uid_t key,value;
 
 
-    json.addKey("length").add(cbor.length());
+//    json.addKey("length").add(cbor.length());
 
     while (cbor.hasData()) {
         if (cbor.get(key)) {

@@ -40,7 +40,8 @@ void EventBus::publish(uid_t src, uid_t ev)
 
 Cbor& EventBus::empty()
 {
-    if(_txd.length() != 0 ) WARN (" EB.txd not cleared ");
+    if(_txd.length() != 0 ) 
+        WARN (" EB.txd not cleared ");
     _txd.clear();
     return _txd;
 }
@@ -279,7 +280,8 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
     } else if ( isRequest(actor->id(),H("init"))) {
         actor->init();
         eb.reply()
-        .addKeyValue(H("line"),actor->_ptLine);
+         .addKeyValue(H("error"),0)
+       .addKeyValue(H("line"),actor->_ptLine);
         eb.send();
     } else {
         uid_t src=0;
