@@ -48,7 +48,7 @@ uid_t Uid::newLabel(Str& str,uid_t uid)
 	const char* label=(const char*) malloc(str.length()+1);
 	_labels[_dynamic_current]=label;
 	strncpy((char*)label,(char*)str.data(),str.length()+1);
-	LOGF(" label : ----%s = %d---- at %d ",label,_uids[_dynamic_current],_dynamic_current);
+//	LOGF(" label : ----%s = %d---- at %d ",label,_uids[_dynamic_current],_dynamic_current);
 	if ( _dynamic_current++ == _max) { // overwrite older labels
 		_dynamic_current=_dynamic_start;
 	}
