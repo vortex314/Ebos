@@ -40,7 +40,7 @@ void EventBus::publish(uid_t src, uid_t ev)
 
 Cbor& EventBus::empty()
 {
-    if(_txd.length() != 0 ) 
+    if(_txd.length() != 0 )
         WARN (" EB.txd not cleared ");
     _txd.clear();
     return _txd;
@@ -123,76 +123,95 @@ void EventBus::publish(Cbor& cbor)
 
 EventFilter& EventBus::onAny()
 {
-    return addFilter(EventFilter::EF_ANY,0,0);
+    Header h= {};
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
-EventFilter& EventBus::filter(uid_t key,uid_t value)
+/*EventFilter& EventBus::filter(uid_t key,uid_t value)
 {
+    Header h= {};
     return addFilter(EventFilter::EF_KV,key,value);
-}
+}*/
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onRequest(uid_t dst)
 {
-    return addFilter(EventFilter::EF_REQUEST,dst,0);
-
+    Header h= {};
+    h.dst=dst;
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onRequest(uid_t dst,uid_t req)
 {
-    return addFilter(EventFilter::EF_REQUEST,dst,req);
-
+    Header h= {};
+    h.dst=dst;
+    h.request=req;
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onReply(uid_t dst,uid_t repl)
 {
-    return addFilter(EventFilter::EF_REPLY,dst,repl);
-
+    Header h= {};
+    h.dst=dst;
+    h.reply=repl;
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onEvent(uid_t src,uid_t ev)
 {
-    return addFilter(EventFilter::EF_EVENT,src,ev);
-
+    Header h= {};
+    h.src=src;
+    h.event=ev;
+    return addFilter(h);
 }
 
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onDst(uid_t dst)
 {
-    return addFilter(EventFilter::EF_KV,EB_DST,dst);
+    Header h= {};
+    h.dst=dst;
+    return addFilter(h);
 
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onRemote()
 {
-    return addFilter(EventFilter::EF_REMOTE,0,0);
-
+    Header h= {};
+    h.dst_device=1;
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onRemoteSrc(uid_t src_dev,uid_t src)
 {
-    return addFilter(EventFilter::EF_REMOTE_SRC,src_dev,src);
-
+     Header h= {};
+    h.src_device=src_dev;
+    h.src=src;
+   return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
 EventFilter& EventBus::onRemoteDst(uid_t dst_dev,uid_t dst)
 {
-    return addFilter(EventFilter::EF_REMOTE_DST,dst_dev,dst);
+    Header h= {};
+    h.dst_device=dst_dev;
+    h.dst=dst;
+     return addFilter(h);
 
 }
 //__________________________________log_____________________________________________________________
 //
 EventFilter& EventBus::onSrc(uid_t src)
 {
-    return addFilter(EventFilter::EF_KV,EB_SRC,src);
+     Header h= {};
+    h.src=src;
+   return addFilter(h);
 
 }
 //_______________________________________________________________________________________________
@@ -225,6 +244,7 @@ bool EventBus::isRequest(uid_t req)
 {
     return EventFilter::isRequest(_rxd,(uid_t)0,req);
 }
+
 
 bool EventBus::isHeader(uid_t id)
 {
@@ -266,7 +286,7 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 {
     if ( isRequest(actor->id(),H("ping"))) {
         eb.reply()
-            .addKeyValue(H("error"),E_OK);
+        .addKeyValue(H("error"),E_OK);
         eb.send();
     } else if ( isRequest(actor->id(),H("status"))) {
         eb.reply()
@@ -280,8 +300,8 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
     } else if ( isRequest(actor->id(),H("init"))) {
         actor->init();
         eb.reply()
-         .addKeyValue(H("error"),0)
-       .addKeyValue(H("line"),actor->_ptLine);
+        .addKeyValue(H("error"),0)
+        .addKeyValue(H("line"),actor->_ptLine);
         eb.send();
     } else {
         uid_t src=0;
@@ -365,11 +385,25 @@ void EventBus::log(Str& str,Cbor& cbor)
             str << " ";
     };
 }*/
+void EventBus::getHeader(Header& header)
+{
+    Cbor& msg=_rxd;
+    bzero(&header,sizeof(header));
+    msg.getKeyValue(EB_DST,header.dst);
+    msg.getKeyValue(EB_SRC,header.src);
+    msg.getKeyValue(EB_DST_DEVICE,header.dst_device);
+    msg.getKeyValue(EB_SRC_DEVICE,header.src_device);
+    msg.getKeyValue(EB_REQUEST,header.request);
+    msg.getKeyValue(EB_REPLY,header.reply);
+    msg.getKeyValue(EB_EVENT,header.event);
+    msg.getKeyValue(EB_ERROR,header.error);
+    msg.getKeyValue(EB_ID,header.id);
+
+}
 //____________________________________________________________________
 //
 void EventBus::eventLoop()
 {
-
     for (Actor* actor = Actor::first(); actor; actor = actor->next()) { // handle all actor timeouts
 
         if (actor->timeout()) {
@@ -379,23 +413,24 @@ void EventBus::eventLoop()
     }
 
     while ((_queue.get(_rxd) == 0) ) { // handle all events
+        getHeader(_rxdHeader);
         for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters
-            if ( filter->match(_rxd))
+            if ( filter->match(_rxdHeader))
                 filter->invokeAllSubscriber(_rxd);
         }
     }
 }
 //____________________________________________________________________
 //
-EventFilter& EventBus::addFilter( EventFilter::type t,uid_t object,uid_t value)
+EventFilter& EventBus::addFilter( Header& h)
 {
     if ( _firstFilter == 0 ) {
-        _firstFilter=new EventFilter(t,object,value);
+        _firstFilter=new EventFilter(h);
         return *_firstFilter;
     } else {
-        EventFilter* cursorFilter = findFilter(t,object,value);
+        EventFilter* cursorFilter = findFilter(h);
         if ( cursorFilter==0) {
-            cursorFilter = lastFilter()->_nextFilter = new EventFilter(t,object,value);
+            cursorFilter = lastFilter()->_nextFilter = new EventFilter(h);
         }
         return *cursorFilter;
     }
@@ -403,23 +438,30 @@ EventFilter& EventBus::addFilter( EventFilter::type t,uid_t object,uid_t value)
 }
 //____________________________________________________________________
 //
-EventFilter* EventBus::findFilter( EventFilter::type t,uid_t object,uid_t value)
+EventFilter* EventBus::findFilter( Header& h)
 {
     for( EventFilter* ef=firstFilter(); ef; ef=ef->next()) {
-        if ( ef->_type == t && ef->_object==object && ef->_value == value) return ef;
+        if ( memcmp(&h,&ef->_pattern,sizeof(Header))==0) return ef;
     }
     return 0;
 }
 //_______________________________________________________________________E V E NT F I L T E R _______________________________________
 
-EventFilter::EventFilter(EventFilter::type type, uid_t object,uid_t value) : _firstSubscriber(0),_nextFilter(0)
+EventFilter::EventFilter(Header& h) : _firstSubscriber(0),_nextFilter(0)
 {
-    _type=type;
-    _object=object;
-    _value=value;
+    memcpy(&_pattern,&h,sizeof(Header));
 }
 //_______________________________________________________________________________________________
 //
+bool EventFilter::match(Header& header)
+{
+    for(int i=0; i< HEADER_COUNT; i++) {
+        if (( _pattern.uid[i]==0 || _pattern.uid[i]==header.uid[i] ) || ( _pattern.uid[i]==1  && header.uid[i]!=0 )) continue;
+        return false;
+    }
+    return true;
+}
+/*
 bool EventFilter::match(Cbor& cbor)
 {
     if ( _type == EF_ANY ) return true;
@@ -449,12 +491,13 @@ bool EventFilter::match(Cbor& cbor)
         }
     return false;
 }
+ * */
 //_______________________________________________________________________________________________
 //
 
 //_______________________________________________________________________________________________
 //
-       bool EventFilter::isEvent(Cbor& cbor ,uid_t src,uid_t ev)
+bool EventFilter::isEvent(Cbor& cbor ,uid_t src,uid_t ev)
 {
     uid_t _src,_event;
     if (cbor.getKeyValue(EB_EVENT,_event) && cbor.getKeyValue(EB_SRC,_src)) {

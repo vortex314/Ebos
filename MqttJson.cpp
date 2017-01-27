@@ -178,14 +178,21 @@ void MqttJson::mqttToEb(Cbor& msg)
         if ( field[1]==H(Sys::hostname()) || ( field[0]==H("event")) ) {	// check device, request ,reply cannot be remote dest, event can
             if ( Actor::findById(field[2]) || ( field[0]==H("event")) ) {	// check actor
                 Cbor& cbor = eb.empty();
-                cbor.addKeyValue(EB_DST_DEVICE,field[1]);
-                cbor.addKeyValue(EB_DST,field[2]);
-                if ( field[0]==H("request"))
+                if ( field[0]==H("request")) {
+                    cbor.addKeyValue(EB_DST_DEVICE,field[1]);
+                    cbor.addKeyValue(EB_DST,field[2]);
                     cbor.addKeyValue(EB_REQUEST,field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
-                else if ( field[0]==H("reply"))
+
+                } else if ( field[0]==H("reply")) {
+                    cbor.addKeyValue(EB_DST_DEVICE,field[1]);
+                    cbor.addKeyValue(EB_DST,field[2]);
                     cbor.addKeyValue(EB_REPLY,field[3]);
-                else if ( field[0]==H("event"))
+
+                } else if ( field[0]==H("event")) {
+                    cbor.addKeyValue(EB_SRC_DEVICE,field[1]);
+                    cbor.addKeyValue(EB_SRC,field[2]);
                     cbor.addKeyValue(EB_EVENT,field[3]);
+                }
                 jsonToCbor(cbor, _message);
                 eb.send();
             } else {
@@ -279,8 +286,10 @@ void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 //
 void MqttJson::ebToMqtt(Cbor& msg)
 {
-    uid_t dst;
+    uid_t dst,uid;
     if (msg.getKeyValue(EB_DST, dst) && dst == H("mqtt"))
+        return;
+    if (msg.getKeyValue(EB_SRC_DEVICE,uid))  // remote event arrived don't send
         return;
     cborToMqtt(_topic, _message, msg);
 
