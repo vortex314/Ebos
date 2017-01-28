@@ -145,11 +145,11 @@ void MqttJson::jsonToCbor(Cbor& cbor, Json& json)
                     json.get(value);
                     cbor.add(uid.hash(value));
                 } else if (key.startsWith("$")) { // HEX string field
-                    Bytes bytes(100);
+                    Bytes bytes(1024);
                     json.get(bytes);
                     cbor.add(bytes);
                 } else if (json.getType() == Json::JSON_STRING) {
-                    Str str(100);
+                    Str str(1024);
                     json.get(str);
                     cbor.add(str);
                 } else if (json.getType() == Json::JSON_NUMBER) {
