@@ -37,6 +37,7 @@ public:
 	void ebToMqtt(Cbor& msg);
 	void mqttToEb(Cbor& msg);
     void setMqttId(uid_t mqttId);
+    void sendPublicEvents(Cbor& msg);
         int fd();
 };
 

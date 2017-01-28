@@ -42,7 +42,7 @@ void System::onEvent(Cbor& msg)
         if ( msg.getKeyValue(H("hostname"),hostname)) {
             Sys::hostname(hostname.c_str());
         };
-        if ( msg.getKeyValue(H("log_level"),level) &&  level <7) {
+        if ( msg.getKeyValue(H("log_level"),level) &&  level <=Log::LOG_NONE) {
             logger.level((Log::LogLevel)level);
         };
 

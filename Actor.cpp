@@ -19,6 +19,7 @@ Actor::Actor(const char* name) {
 	_state = 0;
 	_ptLine = 0;
 	_next = 0;
+    _public=false;
 	setName(name);
 	if (first() == 0) {
 		setFirst(this);

@@ -39,16 +39,16 @@ uid_t Uid::hash(Str& str)
 
 uid_t Uid::newLabel(Str& str,uid_t uid)
 {
-	LOGF(" >>>>>>>>>>>>>>>>>>>>>>>>>>< new label %s:%d at %d ",str.c_str(),uid,_dynamic_current);
+	DEBUG(" >>>>>>>>>>>>>>>>>>>>>>>>>>< new label %s:%d at %d ",str.c_str(),uid,_dynamic_current);
 	if ( _uids[_dynamic_current]) {
-		LOGF(" free ");
+		DEBUG(" free ");
 		free((void*)_labels[_dynamic_current]); // free old label
 	}
 	_uids[_dynamic_current]=uid;
 	const char* label=(const char*) malloc(str.length()+1);
 	_labels[_dynamic_current]=label;
 	strncpy((char*)label,(char*)str.data(),str.length()+1);
-//	LOGF(" label : ----%s = %d---- at %d ",label,_uids[_dynamic_current],_dynamic_current);
+//	DEBUG(" label : ----%s = %d---- at %d ",label,_uids[_dynamic_current],_dynamic_current);
 	if ( _dynamic_current++ == _max) { // overwrite older labels
 		_dynamic_current=_dynamic_start;
 	}
@@ -57,13 +57,13 @@ uid_t Uid::newLabel(Str& str,uid_t uid)
 
 int Uid::uidIndex(uid_t uid)
 {
-//	LOGF("Uid max : %d static_labels : %d  dynam : %d",_max,static_labels_count,_dynamic_current);
+//	DEBUG("Uid max : %d static_labels : %d  dynam : %d",_max,static_labels_count,_dynamic_current);
 	for(uint32_t i=0; i<_max; i++) {
-//		LOGF("%d:%s",_uids[i],_labels[i]);
+//		DEBUG("%d:%s",_uids[i],_labels[i]);
 		if(_uids[i]==uid) {
 			return i;
 		} else if (_uids[i]==0) {
-			LOGF(" %d not found after %d",uid,i);
+			DEBUG(" %d not found after %d",uid,i);
 			break;
 		}
 	}
@@ -97,7 +97,7 @@ uid_t Uid::add(const char* s)
 	for(uint32_t i=0; i<_maxConst; i++ ) {
 		if ( strcmp(s,_labels[i])==0) return _uids[i];
 	}
-//	LOGF(" adding %s ",s);
+//	DEBUG(" adding %s ",s);
 	// else add const char* , hash(s)
 	if ( _maxConst < _max ) {
 		_labels[_maxConst]=s;

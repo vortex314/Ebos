@@ -190,10 +190,10 @@ EventFilter& EventBus::onRemote()
 //
 EventFilter& EventBus::onRemoteSrc(uid_t src_dev,uid_t src)
 {
-     Header h= {};
+    Header h= {};
     h.src_device=src_dev;
     h.src=src;
-   return addFilter(h);
+    return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
@@ -202,47 +202,60 @@ EventFilter& EventBus::onRemoteDst(uid_t dst_dev,uid_t dst)
     Header h= {};
     h.dst_device=dst_dev;
     h.dst=dst;
-     return addFilter(h);
+    return addFilter(h);
 
 }
 //__________________________________log_____________________________________________________________
 //
 EventFilter& EventBus::onSrc(uid_t src)
 {
-     Header h= {};
+    Header h= {};
     h.src=src;
-   return addFilter(h);
+    return addFilter(h);
 
 }
 //_______________________________________________________________________________________________
 //
 bool EventBus::isEvent(uid_t src,uid_t ev)
 {
-    return EventFilter::isEvent(_rxd,src,ev);
+    return (src==0 || _rxdHeader.src==src) && (ev==0 || _rxdHeader.event==ev );
+}
+//_______________________________________________________________________________________________
+//
+bool EventBus::isPublicEvent()
+{
+    if ( _rxdHeader.dst_device ==0 && _rxdHeader.src && _rxdHeader.event )
+    {
+        Actor* pActor= Actor::findById(_rxdHeader.src);
+        if ( pActor && pActor->isPublic()) {
+            return true;
+        }
+    }
+    return false;
 }
 //_______________________________________________________________________________________________
 //
 bool EventBus::isReply(uid_t src,uid_t req)
 {
-    return EventFilter::isReply(_rxd,src,req);
+    return (src==0 || _rxdHeader.src==src) && (req==0 || _rxdHeader.reply==req );
 }
 //_______________________________________________________________________________________________
 //
 bool EventBus::isReplyCorrect(uid_t src,uid_t req)
 {
-    return EventFilter::isReplyCorrect(_rxd,src,req);
+    return isReply(src,req) && _rxdHeader.error==0;
 }
 //_______________________________________________________________________________________________
 //
 bool EventBus::isRequest(uid_t dst,uid_t req)
 {
-    return EventFilter::isRequest(_rxd,dst,req);
+    return  (dst==0 || _rxdHeader.dst==dst) && (req==0 || _rxdHeader.request==req );
 }
 //_______________________________________________________________________________________________
 //
 bool EventBus::isRequest(uid_t req)
 {
-    return EventFilter::isRequest(_rxd,(uid_t)0,req);
+    return isRequest((uid_t)0,req);
 }
 
 
@@ -413,11 +426,15 @@ void EventBus::eventLoop()
     }
 
     while ((_queue.get(_rxd) == 0) ) { // handle all events
+        uint32_t subscribers=0;
         getHeader(_rxdHeader);
         for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters
-            if ( filter->match(_rxdHeader))
+            if ( filter->match(_rxdHeader)) {
                 filter->invokeAllSubscriber(_rxd);
+                subscribers++;
+            }
         }
+        if ( subscribers == 0 ) DEBUG(" no subscribers for this event ");
     }
 }
 //____________________________________________________________________
@@ -456,7 +473,7 @@ EventFilter::EventFilter(Header& h) : _firstSubscriber(0),_nextFilter(0)
 bool EventFilter::match(Header& header)
 {
     for(int i=0; i< HEADER_COUNT; i++) {
-        if (( _pattern.uid[i]==0 || _pattern.uid[i]==header.uid[i] ) || ( _pattern.uid[i]==1  && header.uid[i]!=0 )) continue;
+        if (( _pattern.uid[i]==EB_UID_IGNORE || _pattern.uid[i]==header.uid[i] ) || ( _pattern.uid[i]==EB_UID_ANY  && header.uid[i]!=0 )) continue;
         return false;
     }
     return true;

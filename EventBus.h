@@ -74,6 +74,8 @@ public:
 #define EB_SRC_DEVICE H("#src_device")
 #define EB_DST_DEVICE	H("#dst_device")
 #define EB_ID H("id")
+#define EB_UID_IGNORE  0
+#define EB_UID_ANY  1
 
 class EventBus
 {
@@ -138,6 +140,7 @@ public:
     bool isReply(uid_t src,uid_t req);
     bool isReplyCorrect(uid_t src,uid_t req);
     bool isHeader(uid_t id);
+    bool isPublicEvent();
     void send();
 };
 

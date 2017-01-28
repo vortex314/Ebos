@@ -12,43 +12,7 @@
 #include <Sys.h>
 #include <Log.h>
 #include <Cbor.h>
-/*
-template<class T> class LinkedList {
-	T* _next;
-	static T* _first;
-public:
-	LinkedList() {
-		_next = 0;
-	}
-	static T* next(T* t) {
-		return t->_next;
-	}
-	T* next() {
-		return _next;
-	}
-	void setNext(T* t) {
-		_next = t;
-	}
-	static T* first() {
-		return _first;
-	}
-	void setFirst(T* f) {
-		_first = f;
-	}
-	static T* last() {
-		for (T* t = first(); t != 0; t = next(t)) {
-			if (t->_next == 0)
-				return t;
-		}
-		return 0;
-	}
 
-};
-template<class T> T* LinkedList<T>::_first = 0;
-*/
-
-//#define LOGF(fmt,...) PrintHeader(__FILE__,__LINE__,__FUNCTION__);Serial.printf(fmt,##__VA_ARGS__);Serial.println();
-//extern void PrintHeader(const char* file, uint32_t line, const char *function);
 
 #define PT_BEGIN() bool ptYielded = true; switch (_ptLine) { case 0: // Declare start of protothread (use at start of Run() implementation).
 #define PT_END() default: ; } ; return ; // Stop protothread and end it (use at end of Run() implementation).
@@ -102,6 +66,7 @@ private:
     uint16_t _id;
     uint64_t _timeout;
     uint32_t _state;
+    bool _public;
 
     static Actor* _first;
     Actor* _next;
@@ -157,6 +122,16 @@ public:
     inline void id(uint16_t id)
     {
         _id=id;
+    }
+    
+        inline bool isPublic()
+    {
+        return _public;
+    }
+
+    inline void setPublic(bool  isPublic)
+    {
+        _public = isPublic;
     }
     inline const char* name()
     {

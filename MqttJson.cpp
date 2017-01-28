@@ -60,7 +60,15 @@ void MqttJson::setup()
             (MethodHandler) &MqttJson::mqttToEb);
     eb.onEvent(_mqttId, H("disconnected")).subscribe(this,
             (MethodHandler) &MqttJson::onEvent);
+    eb.onEvent(0,1).subscribe(this,(MethodHandler) &MqttJson::sendPublicEvents);
     uid.add(labels,LABEL_COUNT);
+}
+//----------------------------------------------------------------------------------
+void MqttJson::sendPublicEvents(Cbor& msg)
+{
+    if ( eb.isPublicEvent()) {  // src actor is public
+        this->ebToMqtt(msg);
+    }
 }
 //----------------------------------------------------------------------------------
 
