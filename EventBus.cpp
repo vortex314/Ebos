@@ -175,6 +175,7 @@ EventFilter& EventBus::onDst(uid_t dst)
 {
     Header h= {};
     h.dst=dst;
+    h.dst_device=EB_UID_LOCAL;
     return addFilter(h);
 
 }
@@ -224,8 +225,7 @@ bool EventBus::isEvent(uid_t src,uid_t ev)
 //
 bool EventBus::isPublicEvent()
 {
-    if ( _rxdHeader.dst_device ==0 && _rxdHeader.src && _rxdHeader.event )
-    {
+    if ( _rxdHeader.dst_device ==0 && _rxdHeader.src && _rxdHeader.event ) {
         Actor* pActor= Actor::findById(_rxdHeader.src);
         if ( pActor && pActor->isPublic()) {
             return true;
@@ -473,7 +473,11 @@ EventFilter::EventFilter(Header& h) : _firstSubscriber(0),_nextFilter(0)
 bool EventFilter::match(Header& header)
 {
     for(int i=0; i< HEADER_COUNT; i++) {
-        if (( _pattern.uid[i]==EB_UID_IGNORE || _pattern.uid[i]==header.uid[i] ) || ( _pattern.uid[i]==EB_UID_ANY  && header.uid[i]!=0 )) continue;
+        if (
+            ( _pattern.uid[i]==EB_UID_IGNORE || _pattern.uid[i]==header.uid[i] )
+            || ( _pattern.uid[i]==EB_UID_ANY  && header.uid[i]!=0 )
+            || ( _pattern.uid[i]==EB_UID_LOCAL  && ( header.uid[i]==0 || header.uid[i]==H(Sys::hostname()) ))
+        ) continue;
         return false;
     }
     return true;

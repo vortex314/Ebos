@@ -76,6 +76,7 @@ public:
 #define EB_ID H("id")
 #define EB_UID_IGNORE  0
 #define EB_UID_ANY  1
+#define EB_UID_LOCAL 2
 
 class EventBus
 {
