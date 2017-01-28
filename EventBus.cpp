@@ -331,6 +331,16 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 //____________________________________________________________________
 //
 
+Str& tupple(Str& str,uid_t dev,uid_t srv)
+{
+    str.append("(");
+    str.append(dev ? uid.label(dev) : "-");
+    str.append(",");
+    str.append(srv ? uid.label(srv) : "-");
+    str.append(")");
+    return str;
+}
+
 
 void EventBus::log(Str& str,Cbor& cbor)
 {
@@ -343,11 +353,16 @@ void EventBus::log(Str& str,Cbor& cbor)
     cbor.getKeyValue(EB_DST,dst);
     cbor.getKeyValue(EB_SRC,src);
     if ( cbor.getKeyValue(EB_REQUEST,op) ) {
-        str.append(uid.label(src)).append("---").append(uid.label(op)).append("-->").append(uid.label(dst));
+        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
+        str.append("---").append(uid.label(op)).append("-->");
+        tupple(str,_rxdHeader.dst_device,_rxdHeader.dst);
     } else if (  cbor.getKeyValue(EB_REPLY ,op)) {
-        str.append(uid.label(dst)).append("<--").append(uid.label(op)).append("---").append(uid.label(src));
+        tupple(str,_rxdHeader.dst_device,_rxdHeader.dst);
+        str.append("<--").append(uid.label(op)).append("---");
+        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
     } else if (cbor.getKeyValue(EB_EVENT ,op)) {
-        str.append(uid.label(src)).append("---").append(uid.label(op)).append(" >> ");
+        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
+        str.append("---").append(uid.label(op)).append(" >> ");
     }
     cbor.offset(0);
 

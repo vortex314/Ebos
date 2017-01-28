@@ -24,7 +24,7 @@ class MqttJson: public Actor {
         uid_t _mqttId;
 
 public:
-	MqttJson(const char* name);
+	MqttJson(const char* name,uint32_t jsonSize);
 	void setup();
 	void init(){};
 	bool addHeader(Json& json, Cbor& cbor, uint16_t key);

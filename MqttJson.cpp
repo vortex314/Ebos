@@ -38,8 +38,8 @@ Router - events
 
 #include "ebos_labels.h"
 
-MqttJson::MqttJson(const char* name) :
-    Actor(name), _topic(TOPIC_LENGTH), _message(300), _name(30)
+MqttJson::MqttJson(const char* name,uint32_t jsonSize) :
+    Actor(name), _topic(TOPIC_LENGTH), _message(jsonSize)//, _name(30)
 {
     _actor = 0;
 }
@@ -301,8 +301,7 @@ void MqttJson::ebToMqtt(Cbor& msg)
         return;
     cborToMqtt(_topic, _message, msg);
 
-    eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(
-        H("message"), _message);
+    eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(H("message"), _message);
     eb.send();
 }
 //__________________________________________________________________________________________________
