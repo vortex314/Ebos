@@ -52,13 +52,13 @@ void MqttCbor::setMqttId(uid_t mqttId)
 void MqttCbor::setup()
 {
     timeout(1);
-    eb.onDst(id()).subscribe(this);
-    eb.onRemote().subscribe(this, (MethodHandler) &MqttCbor::ebToMqtt);
-//	eb.onEvent(H("Relay"), 0).subscribe(this,
+    eb.onDst(id()).call(this);
+    eb.onRemote().call(this, (MethodHandler) &MqttCbor::ebToMqtt);
+//	eb.onEvent(H("Relay"), 0).call(this,
 //	                                    (MethodHandler) &MqttCbor::ebToMqtt);
-    eb.onEvent(_mqttId, H("published")).subscribe(this,
+    eb.onEvent(_mqttId, H("published")).call(this,
             (MethodHandler) &MqttCbor::mqttToEb);
-    eb.onEvent(_mqttId, H("disconnected")).subscribe(this,
+    eb.onEvent(_mqttId, H("disconnected")).call(this,
             (MethodHandler) &MqttCbor::onEvent);
     uid.add(labels,LABEL_COUNT);
 }

@@ -591,7 +591,7 @@ Subscriber* EventFilter::addSubscriber()
 
 //____________________________________________________________________
 //
-void EventFilter::subscribe(Actor* instance,
+void EventFilter::call(Actor* instance,
                             MethodHandler handler)
 {
     Subscriber* sub = addSubscriber();
@@ -600,7 +600,7 @@ void EventFilter::subscribe(Actor* instance,
 }
 //____________________________________________________________________
 //
-void EventFilter::subscribe( StaticHandler handler)
+void EventFilter::call( StaticHandler handler)
 {
     Subscriber* sub = addSubscriber();
     sub->_staticHandler = handler;
@@ -608,9 +608,9 @@ void EventFilter::subscribe( StaticHandler handler)
 }
 //____________________________________________________________________
 //
-void EventFilter::subscribe(Actor* instance)
+void EventFilter::call(Actor* instance)
 {
-    subscribe(instance, 0);
+    call(instance, 0);
 }
 
 EventFilter* EventFilter::next()

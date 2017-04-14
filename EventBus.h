@@ -47,9 +47,9 @@ public:
     Subscriber* firstSubscriber();
     Subscriber* lastSubscriber();
     Subscriber* addSubscriber();
-    void subscribe( Actor* instance, MethodHandler handler);
-    void subscribe( StaticHandler handler);
-    void subscribe(Actor* actor);
+    void call( Actor* instance, MethodHandler handler);
+    void call( StaticHandler handler);
+    void call(Actor* actor);
     void invokeAllSubscriber(Cbor& );
 
     EventFilter* next();

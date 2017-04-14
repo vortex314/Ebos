@@ -9,6 +9,7 @@
 #include <MqttJson.h>
 #include <malloc.h>
 
+
 #define TOPIC_LENGTH 40
 /*
 Router - events
@@ -52,15 +53,15 @@ void MqttJson::setMqttId(uid_t mqttId)
 void MqttJson::setup()
 {
     timeout(1);
-    eb.onDst(id()).subscribe(this);
-    eb.onRemote().subscribe(this, (MethodHandler) &MqttJson::ebToMqtt);
-//	eb.onEvent(H("Relay"), 0).subscribe(this,
+    eb.onDst(id()).call(this);
+    eb.onRemote().call(this, (MethodHandler) &MqttJson::ebToMqtt);
+//	eb.onEvent(H("Relay"), 0).call(this,
 //	                                    (MethodHandler) &Router::ebToMqtt);
-    eb.onEvent(_mqttId, H("published")).subscribe(this,
+    eb.onEvent(_mqttId, H("published")).call(this,
             (MethodHandler) &MqttJson::mqttToEb);
-    eb.onEvent(_mqttId, H("disconnected")).subscribe(this,
+    eb.onEvent(_mqttId, H("disconnected")).call(this,
             (MethodHandler) &MqttJson::onEvent);
-    eb.onEvent(0,1).subscribe(this,(MethodHandler) &MqttJson::sendPublicEvents);
+    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
     uid.add(labels,LABEL_COUNT);
 }
 //----------------------------------------------------------------------------------
@@ -172,6 +173,7 @@ void MqttJson::jsonToCbor(Cbor& cbor, Json& json)
 }
 //------------------------------------------------------------------------------------------------
 //
+
 void MqttJson::mqttToEb(Cbor& msg)
 {
     if (msg.getKeyValue(H("topic"), _topic)

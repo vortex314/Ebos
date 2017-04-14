@@ -166,7 +166,7 @@ void SlipStream::loop()
 
 void SlipStream::setup()
 {
-    eb.onEvent(_src,H("rxd")).subscribe(this);
+    eb.onEvent(_src,H("rxd")).call(this);
 }
 
 void SlipStream::onEvent(Cbor& cbor)

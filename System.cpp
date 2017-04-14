@@ -14,7 +14,7 @@ void System::init()
 }
 void System::setup()
 {
-    eb.onDst(H("system")).subscribe(this);
+    eb.onDst(H("system")).call(this);
 }
 
 void System::onEvent(Cbor& msg)
