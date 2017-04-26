@@ -20,7 +20,9 @@ Actor::Actor(const char* name) {
 	_ptLine = 0;
 	_next = 0;
     _public=false;
-	setName(name);
+    _id=0;
+    _name = name;
+//	setName(name);
 	if (first() == 0) {
 		setFirst(this);
 	} else {
@@ -29,9 +31,15 @@ Actor::Actor(const char* name) {
 }
 
 void Actor::setName(const char* name) {
-	_id = H(name);
-	_name = name;
-    uid.add(name);
+    Str* actorName=new Str(30);
+    *actorName =Sys::hostname();
+    *actorName+= ".";
+    *actorName += name;
+    _name = actorName->c_str();
+    _id = uid.hash(*actorName);
+//	_id = H(name);
+//	_name = name;
+    uid.add(_name);
     LOGF(" new Actor %s  [%d]",_name,_id);
 }
 
@@ -47,6 +55,12 @@ void Actor::setName(const char* name) {
  last()->setNext(this);
  }
  }*/
+ 
+ uid_t Actor::id(){
+     if ( _id ) return _id;
+     setName(_name);
+     return _id;
+ }
 
 Actor* Actor::last() {
 	Actor* cursor = first();

@@ -8,11 +8,11 @@
 typedef void (Actor::*MethodHandler)(Cbor&);
 typedef void (*StaticHandler)(Cbor&);
 #define CALL_MEMBER_FUNC(object,ptrToMember)  ((*object).*(ptrToMember))
-#define HEADER_COUNT 9
+#define HEADER_COUNT 7
 typedef struct {
     union {
         struct {
-            uid_t dst,dst_device,src,src_device,request,reply,event,id,error ;
+            uid_t dst,src,request,reply,event,id,error ;
         };
         uid_t uid[HEADER_COUNT];
     };
@@ -71,12 +71,11 @@ public:
 #define EB_EVENT H("#event")
 #define EB_ERROR H("error")
 #define EB_REGISTER H("register")
-#define EB_SRC_DEVICE H("#src_device")
-#define EB_DST_DEVICE	H("#dst_device")
 #define EB_ID H("id")
 #define EB_UID_IGNORE  0
 #define EB_UID_ANY  1
 #define EB_UID_LOCAL 2
+#define EB_UID_REMOTE 3
 
 class EventBus
 {
@@ -120,8 +119,8 @@ public:
     EventFilter& onDst(uid_t dst);
     EventFilter& onSrc(uid_t src);
     EventFilter& onRemote();
-    EventFilter& onRemoteSrc(uid_t src_dev,uid_t src);
-    EventFilter& onRemoteDst(uid_t dst_dev,uid_t dst);
+    EventFilter& onRemoteSrc(uid_t src);
+    EventFilter& onRemoteDst(uid_t dst);
 
     void eventLoop();
 //   EventFilter* findFilter(EventFilter::type ,uid_t o,uid_t v);

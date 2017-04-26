@@ -64,7 +64,6 @@ Cbor& EventBus::event(uid_t src, uid_t event)
 Cbor& EventBus::requestRemote(uid_t dev,uid_t dst,uid_t req,uid_t src)
 {
     empty();
-    _txd.addKeyValue(EB_DST_DEVICE,dev);
     _txd.addKeyValue(EB_DST,dst);
     _txd.addKeyValue(EB_REQUEST,req);
     _txd.addKeyValue(EB_SRC,src);
@@ -100,8 +99,6 @@ Cbor& EventBus::reply()
         _txd.addKeyValue(EB_REPLY,repl);
     if ( _rxd.getKeyValue(EB_DST,src))
         _txd.addKeyValue(EB_SRC,src);
-    if ( _rxd.getKeyValue(EB_SRC_DEVICE,src))
-        _txd.addKeyValue(EB_DST_DEVICE,src);
     if ( _rxd.getKeyValue(EB_ID,id))
         _txd.addKeyValue(EB_ID,id);
     return _txd;
@@ -175,7 +172,6 @@ EventFilter& EventBus::onDst(uid_t dst)
 {
     Header h= {};
     h.dst=dst;
-    h.dst_device=EB_UID_LOCAL;
     return addFilter(h);
 
 }
@@ -184,25 +180,23 @@ EventFilter& EventBus::onDst(uid_t dst)
 EventFilter& EventBus::onRemote()
 {
     Header h= {};
-    h.dst_device=1;
+    h.dst=EB_UID_REMOTE;
     return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
-EventFilter& EventBus::onRemoteSrc(uid_t src_dev,uid_t src)
+EventFilter& EventBus::onRemoteSrc(uid_t src)
 {
     Header h= {};
-    h.src_device=src_dev;
-    h.src=src;
+    h.src=EB_UID_REMOTE;
     return addFilter(h);
 }
 //_______________________________________________________________________________________________
 //
-EventFilter& EventBus::onRemoteDst(uid_t dst_dev,uid_t dst)
+EventFilter& EventBus::onRemoteDst(uid_t dst)
 {
     Header h= {};
-    h.dst_device=dst_dev;
-    h.dst=dst;
+    h.dst=EB_UID_REMOTE;
     return addFilter(h);
 
 }
@@ -225,7 +219,7 @@ bool EventBus::isEvent(uid_t src,uid_t ev)
 //
 bool EventBus::isPublicEvent()
 {
-    if ( _rxdHeader.dst_device ==0 && _rxdHeader.src && _rxdHeader.event ) {
+    if ( _rxdHeader.dst ==EB_UID_REMOTE && _rxdHeader.src && _rxdHeader.event ) {
         Actor* pActor= Actor::findById(_rxdHeader.src);
         if ( pActor && pActor->isPublic()) {
             return true;
@@ -261,7 +255,7 @@ bool EventBus::isRequest(uid_t req)
 
 bool EventBus::isHeader(uid_t id)
 {
-    return id==EB_REQUEST || id==EB_REPLY || id==EB_DST || id==EB_SRC || id==EB_EVENT || id==EB_SRC_DEVICE  || id==EB_DST_DEVICE;
+    return id==EB_REQUEST || id==EB_REPLY || id==EB_DST || id==EB_SRC || id==EB_EVENT ;
 }
 
 
@@ -334,8 +328,8 @@ void EventBus::defaultHandler(Actor* actor,Cbor& msg)
 Str& tupple(Str& str,uid_t dev,uid_t srv)
 {
     str.append("(");
-    str.append(dev ? uid.label(dev) : "-");
-    str.append(",");
+//    str.append(dev ? uid.label(dev) : "-");
+//    str.append(",");
     str.append(srv ? uid.label(srv) : "-");
     str.append(")");
     return str;
@@ -353,15 +347,15 @@ void EventBus::log(Str& str,Cbor& cbor)
     cbor.getKeyValue(EB_DST,dst);
     cbor.getKeyValue(EB_SRC,src);
     if ( cbor.getKeyValue(EB_REQUEST,op) ) {
-        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
+        tupple(str,0,_rxdHeader.src);
         str.append("---").append(uid.label(op)).append("-->");
-        tupple(str,_rxdHeader.dst_device,_rxdHeader.dst);
+        tupple(str,0,_rxdHeader.dst);
     } else if (  cbor.getKeyValue(EB_REPLY ,op)) {
-        tupple(str,_rxdHeader.dst_device,_rxdHeader.dst);
+        tupple(str,0,_rxdHeader.dst);
         str.append("<--").append(uid.label(op)).append("---");
-        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
+        tupple(str,0,_rxdHeader.src);
     } else if (cbor.getKeyValue(EB_EVENT ,op)) {
-        tupple(str,_rxdHeader.src_device,_rxdHeader.src);
+        tupple(str,0,_rxdHeader.src);
         str.append("---").append(uid.label(op)).append(" >> ");
     }
     cbor.offset(0);
@@ -419,8 +413,6 @@ void EventBus::getHeader(Header& header)
     bzero(&header,sizeof(header));
     msg.getKeyValue(EB_DST,header.dst);
     msg.getKeyValue(EB_SRC,header.src);
-    msg.getKeyValue(EB_DST_DEVICE,header.dst_device);
-    msg.getKeyValue(EB_SRC_DEVICE,header.src_device);
     msg.getKeyValue(EB_REQUEST,header.request);
     msg.getKeyValue(EB_REPLY,header.reply);
     msg.getKeyValue(EB_EVENT,header.event);
@@ -489,9 +481,11 @@ bool EventFilter::match(Header& header)
 {
     for(int i=0; i< HEADER_COUNT; i++) {
         if (
-            ( _pattern.uid[i]==EB_UID_IGNORE || _pattern.uid[i]==header.uid[i] )
+            ( _pattern.uid[i]==EB_UID_IGNORE )
+            || ( _pattern.uid[i]==header.uid[i] )
             || ( _pattern.uid[i]==EB_UID_ANY  && header.uid[i]!=0 )
-            || ( _pattern.uid[i]==EB_UID_LOCAL  && ( header.uid[i]==0 || header.uid[i]==H(Sys::hostname()) ))
+            || ( _pattern.uid[i]==EB_UID_LOCAL  && (Actor::findById(header.uid[i])!=0) )
+            || ( _pattern.uid[i]==EB_UID_REMOTE && (Actor::findById(header.uid[i])==0))
         ) continue;
         return false;
     }

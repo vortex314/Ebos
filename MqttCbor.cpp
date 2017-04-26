@@ -87,7 +87,7 @@ CONNECTING : {
 
             willTopic="event/";
             willTopic+=Sys::hostname();
-            willTopic+="/system/alive";
+            willTopic+=".system/alive";
 
             eb.request(_mqttId, H("connect"), id())
             .addKeyValue(H("clientId"),Sys::hostname())
@@ -125,7 +125,7 @@ SLEEPING: {
                 _name = _actor->name();
                 _topic = "event/";
                 _topic += Sys::hostname();
-                _topic += "/";
+                _topic += ".";
                 _topic += _name;
                 _topic += "/alive";
                 _message.clear();
@@ -155,8 +155,6 @@ bool MqttCbor::addTopic(Str& topic, Cbor& cbor, uid_t key)
 {
     uid_t v;
     if (cbor.getKeyValue(key, v)) {
-        if (topic.length())
-            topic.append('/');
         const char* nm = uid.label(v);
         if (nm)
             topic.append(nm);
@@ -173,7 +171,6 @@ void MqttCbor::cborToMqtt(Str& topic, Cbor& msg, Cbor& cbor)
     msg.clear();
     if (cbor.gotoKey(EB_REQUEST)  || cbor.gotoKey(EB_REPLY)) {
         topic="dst";
-        addTopic(topic,cbor,EB_DST_DEVICE);
         addTopic(topic, cbor, EB_DST);
         if ( cbor.gotoKey(EB_REQUEST))
             addTopic(topic,cbor,EB_REQUEST);
@@ -182,7 +179,9 @@ void MqttCbor::cborToMqtt(Str& topic, Cbor& msg, Cbor& cbor)
     } else if (cbor.gotoKey(EB_EVENT)) {
         topic="event/";
         topic += Sys::hostname();
+        topic += ".";
         addTopic(topic, cbor, EB_SRC);
+        topic += "/";
         addTopic(topic, cbor, EB_EVENT);
     }
     msg=cbor;

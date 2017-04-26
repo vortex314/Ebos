@@ -61,7 +61,7 @@ void MqttJson::setup()
             (MethodHandler) &MqttJson::mqttToEb);
     eb.onEvent(_mqttId, H("disconnected")).call(this,
             (MethodHandler) &MqttJson::onEvent);
-    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
+//    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
     uid.add(labels,LABEL_COUNT);
 }
 //----------------------------------------------------------------------------------
@@ -90,8 +90,6 @@ bool MqttJson::addTopic(Str& topic, Cbor& cbor, uid_t key)
 {
     uid_t v;
     if (cbor.getKeyValue(key, v)) {
-        if (topic.length())
-            topic.append('/');
         const char* nm = uid.label(v);
         if (nm)
             topic.append(nm);
@@ -182,34 +180,22 @@ void MqttJson::mqttToEb(Cbor& msg)
         int i = 0;
         uid_t v;
         _topic.offset(0);
-        while ((v = nextHash(_topic)) && i < 4) {
+        while ((v = nextHash(_topic)) && i < 3) {
             field[i++] = v;
         }
-        if ( field[1]==H(Sys::hostname()) || ( field[0]==H("event")) ) {	// check device, request ,reply cannot be remote dest, event can
-            if ( Actor::findById(field[2]) || ( field[0]==H("event")) ) {	// check actor
-                Cbor& cbor = eb.empty();
-                if ( field[0]==H("request")) {
-                    cbor.addKeyValue(EB_DST_DEVICE,field[1]);
-                    cbor.addKeyValue(EB_DST,field[2]);
-                    cbor.addKeyValue(EB_REQUEST,field[3]); // EVENT, REPLY , REQUEST => reply/<dst_device>/<dst>/<reply|request|event value>
+        if ( Actor::findById(field[1]) || ( field[0]==H("src")) ) {	// check actor
+            Cbor& cbor = eb.empty();
+            if ( field[0]==H("dst")) {
+                cbor.addKeyValue(EB_DST,field[1]);
 
-                } else if ( field[0]==H("reply")) {
-                    cbor.addKeyValue(EB_DST_DEVICE,field[1]);
-                    cbor.addKeyValue(EB_DST,field[2]);
-                    cbor.addKeyValue(EB_REPLY,field[3]);
-
-                } else if ( field[0]==H("event")) {
-                    cbor.addKeyValue(EB_SRC_DEVICE,field[1]);
-                    cbor.addKeyValue(EB_SRC,field[2]);
-                    cbor.addKeyValue(EB_EVENT,field[3]);
-                }
-                jsonToCbor(cbor, _message);
-                eb.send();
-            } else {
-                WARN(" wrong actor ");
+            } else if ( field[0]==H("src")) {
+                cbor.addKeyValue(EB_SRC,field[1]);
+                cbor.addKeyValue(EB_EVENT,field[2]);
             }
+            jsonToCbor(cbor, _message);
+            eb.send();
         } else {
-            WARN(" wrong device ");	//TODO could try CBOR
+            WARN(" wrong actor ");
         }
     } else {
         WARN(" wrong mqtt layout ");
@@ -217,41 +203,43 @@ void MqttJson::mqttToEb(Cbor& msg)
 }
 
 
+//__________________________________________________________________________________________________
+//
+void MqttJson::addData(Json& json,Cbor& cbor)
+{
+    //	Cbor::PackType type;
+//        Cbor::CborVariant variant;
+    cbor.offset(0);
+    uid_t key,value;
+
+
+//    json.addKey("length").add(cbor.length());
+    if ( cbor.gotoKey(H("data"))) {
+        cbor.tokenToString(json);
+    } else if ( cbor.gotoKey(H("$data"))) {
+        cbor.tokenToString(json);
+    } else if ( cbor.gotoKey(H("#data"))) {
+        if(cbor.get(value)) {
+            if (uid.label(value)) {
+                json.add(uid.label(value));
+            } else {
+                json.add("enum no label");
+            }
+        } else {
+            json.add(" expected enum ");
+        }
+    } else if ( cbor.gotoKey(H("@data"))) {
+        json.add(" Base64 data top implement ");
+    } else {
+        json.add(" no data field ");
+    }
+}
 
 //__________________________________________________________________________________________________
 //
-void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
+void MqttJson::addMessageData(Json& json,Cbor& cbor)
 {
-    uid_t v;
-    topic.clear();
-    json.clear();
-    json.addMap();
-    if ( cbor.getKeyValue(EB_SRC,v)) {
-        json.addKey(uid.label(EB_SRC));
-        json.add(uid.label(v));
-    }
-
-    if (cbor.gotoKey(EB_REQUEST) ) {
-        topic="request";
-        addTopic(topic,cbor,EB_DST_DEVICE);
-        addTopic(topic, cbor, EB_DST);
-        addTopic(topic,cbor,EB_REQUEST);
-        json.addKey("#src_device").add(Sys::hostname());
-    } else if (cbor.gotoKey(EB_REPLY)) {
-        topic="reply";
-        addTopic(topic,cbor,EB_DST_DEVICE);
-        addTopic(topic, cbor, EB_DST);
-        addTopic(topic,cbor,EB_REPLY);
-        json.addKey("#src_device").add(Sys::hostname());
-    } else if (cbor.gotoKey(EB_EVENT)) {
-        topic="event/";
-        topic += Sys::hostname();
-        addTopic(topic, cbor, EB_SRC);
-        addTopic(topic, cbor, EB_EVENT);
-    }
-
-
-//	Cbor::PackType type;
+    //	Cbor::PackType type;
 //        Cbor::CborVariant variant;
     cbor.offset(0);
     uid_t key,value;
@@ -261,45 +249,61 @@ void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
 
     while (cbor.hasData()) {
         if (cbor.get(key)) {
-            if ( eb.isHeader(key) ) {
-                cbor.skipToken();
-            } else {
-                const char* name = uid.label(key);
-                json.addKey(name);
-                if (name[0]=='#' ) {
-                    if(cbor.get(value)) {
-                        if (uid.label(value)) {
-                            json.add(uid.label(value));
-                        } else {
-                            json.add("enum no label");
-                        }
+            const char* name = uid.label(key);
+            json.addKey(name);
+            if (name[0]=='#' ) {
+                if(cbor.get(value)) {
+                    if (uid.label(value)) {
+                        json.add(uid.label(value));
                     } else {
-                        json.add(" expected enum ");
+                        json.add("enum no label");
                     }
-
-                } else if ( name[0]=='@') { // add bytes in Base64
-                    json.add(" @ not implemented yet ");
-                    cbor.skipToken();
-                } else {// default cbor behaviour
-                    json.addComma();
-                    cbor.tokenToString(json);
+                } else {
+                    json.add(" expected enum ");
                 }
+
+            } else if ( name[0]=='@') { // add bytes in Base64
+                json.add(" @ not implemented yet ");
+                cbor.skipToken();
+            } else {// default cbor behaviour
+                json.addComma();
+                cbor.tokenToString(json);
             }
         } else {
             json.add("expected int key");
         }
     }
-    json.addBreak();
 
+}
+
+//__________________________________________________________________________________________________
+//
+void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
+{
+    topic.clear();
+    json.clear();
+
+    if (cbor.gotoKey(EB_REQUEST) ) {
+        topic="dst/";
+        addTopic(topic, cbor, EB_DST);
+        json.addMap();
+        addMessageData(json,cbor);
+        json.addBreak();
+    } else if (cbor.gotoKey(EB_EVENT)) {
+        topic="src/";
+        addTopic(topic, cbor, EB_SRC);
+        topic += "/";
+        addTopic(topic, cbor, EB_EVENT);
+        addData(json,cbor);
+//        cbor.getKeyValue(H("data"),json);
+    }
 }
 //--------------------------------------------------------------------------------------------------
 //
 void MqttJson::ebToMqtt(Cbor& msg)
 {
     uid_t dst,uid;
-    if (msg.getKeyValue(EB_DST, dst) && dst == H("mqtt"))
-        return;
-    if (msg.getKeyValue(EB_SRC_DEVICE,uid))  // remote event arrived don't send
+    if (msg.getKeyValue(EB_DST, dst) && dst == _mqttId )
         return;
     cborToMqtt(_topic, _message, msg);
 
@@ -317,6 +321,8 @@ void MqttJson::onEvent(Cbor& msg)
     goto CONNECTING;
 DISCONNECTING: {
         while (true) {
+            timeout(2000);
+            PT_YIELD_UNTIL(timeout() );
             eb.request(_mqttId, H("disconnect"), id());
             eb.send();
             timeout(2000);
@@ -327,9 +333,9 @@ DISCONNECTING: {
 CONNECTING : {
         while(true) {
 
-            willTopic="event/";
+            willTopic="src/";
             willTopic+=Sys::hostname();
-            willTopic+="/system/alive";
+            willTopic+=".system/alive";
 
             eb.request(_mqttId, H("connect"), id())
             .addKeyValue(H("clientId"),Sys::hostname())
@@ -347,21 +353,7 @@ CONNECTING : {
         }
     }
 SUBSCRIBE_REQUEST: {
-        _topic = "request/";
-        _topic += Sys::hostname();
-        _topic += "/#";
-        eb.request(_mqttId, H("subscribe"), id()).addKeyValue(
-            H("topic"), _topic);
-        eb.send();
-        timeout(3000);
-        PT_YIELD_UNTIL(
-            eb.isReply(_mqttId, H("subscribe")) || timeout() || eb.isEvent(_mqttId, H("disconnected")));
-        if (eb.isReplyCorrect(_mqttId, H("subscribe")) )
-            goto SUBSCRIBE_REPLY;
-        goto DISCONNECTING;
-    }
-SUBSCRIBE_REPLY: {
-        _topic = "reply/";
+        _topic = "dst/";
         _topic += Sys::hostname();
         _topic += "/#";
         eb.request(_mqttId, H("subscribe"), id()).addKeyValue(
@@ -374,29 +366,28 @@ SUBSCRIBE_REPLY: {
             goto SLEEPING;
         goto DISCONNECTING;
     }
+
 SLEEPING: {
         while (true) {
 //            for (_actor = Actor::first(); _actor; _actor = _actor->next()) {
 //            _name = _actor->name();
-            _topic = "event/";
+            _topic = "src/";
             _topic += Sys::hostname();
-            _topic += "/";
+            _topic += ".";
             _topic += "system";
             _topic += "/alive";
             _message.clear();
             _message.add(true);
-            eb.request(_mqttId, H("publish"), id()).addKeyValue(
-                H("topic"), _topic).addKeyValue(H("message"), _message);
+            eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(H("message"), _message);
             eb.send();
             timeout(2000);
 
             PT_YIELD_UNTIL( eb.isReplyCorrect(_mqttId, H("publish")) || timeout());
-            if (timeout())
+            if (timeout()) {
                 goto DISCONNECTING;
-            timeout(10000);
-
+            }
+            timeout(8000);
             PT_YIELD_UNTIL(timeout());
-//            }
         }
     }
     PT_END()

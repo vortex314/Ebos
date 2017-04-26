@@ -1,8 +1,9 @@
 #include "System.h"
 #include "Sys.h"
 
-System::System() : Actor("system")
+System::System(const char* name) : Actor(name)
 {
+    _idxProps=0;
 }
 
 System::~System()
@@ -15,6 +16,41 @@ void System::init()
 void System::setup()
 {
     eb.onDst(H("system")).call(this);
+    timeout(5000);
+}
+
+
+
+void System::publishProps()
+{
+    switch(_idxProps) {
+    case 0 : {
+        eb.event(id(),H("hostname")).addKeyValue(H("data"),Sys::hostname());
+        break;
+    }
+    case 1 : {
+        eb.event(id(),H("upTime")).addKeyValue(H("data"),Sys::millis());
+        break;
+    }
+    case 2 : {
+        uint32_t nr=ESP.getChipId();
+        uint8_t data[4];
+        Bytes bytes(data,4);
+        for(int i=0; i<4; i++) {
+            data[3-i] = nr & 0xFF;
+            nr = nr >>8;
+        }
+        eb.event(id(),H("$chipId")).addKeyValue(H("$data"),bytes);
+        break;
+    }
+    case 3 : {
+        eb.event(id(),H("heap")).addKeyValue(H("data"),ESP.getFreeHeap());
+        break;
+    }
+
+    }
+    eb.send();
+    if( ++_idxProps== 4) _idxProps=0;
 }
 
 void System::onEvent(Cbor& msg)
@@ -53,6 +89,9 @@ void System::onEvent(Cbor& msg)
 
         reset();
 
+    } else if ( timeout()) {
+        publishProps();
+        timeout(20000);
     } else
 
         eb.defaultHandler(this, msg);
