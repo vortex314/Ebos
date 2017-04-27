@@ -111,8 +111,10 @@ uint64_t Actor::lowestTimeout() {
 
 Actor* Actor::findById(uint16_t id) {
 	for (Actor* cur = first(); cur; cur = cur->next()) {
+ //       if ( cur->id()==0) DEBUG(" actor with id==0 : %s",cur->name());
 		if (cur->id() == id)
 			return cur;
 	}
+//    DEBUG(" Actor not found %d",id);
 	return 0;
 }

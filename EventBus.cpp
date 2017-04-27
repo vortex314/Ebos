@@ -185,7 +185,7 @@ EventFilter& EventBus::onRemote()
 }
 //_______________________________________________________________________________________________
 //
-EventFilter& EventBus::onRemoteSrc(uid_t src)
+/*EventFilter& EventBus::onRemoteSrc(uid_t src)
 {
     Header h= {};
     h.src=EB_UID_REMOTE;
@@ -199,7 +199,7 @@ EventFilter& EventBus::onRemoteDst(uid_t dst)
     h.dst=EB_UID_REMOTE;
     return addFilter(h);
 
-}
+}*/
 //__________________________________log_____________________________________________________________
 //
 EventFilter& EventBus::onSrc(uid_t src)
@@ -480,12 +480,14 @@ EventFilter::EventFilter(Header& h) : _firstSubscriber(0),_nextFilter(0)
 bool EventFilter::match(Header& header)
 {
     for(int i=0; i< HEADER_COUNT; i++) {
+        if ( (_pattern.uid[i]==EB_UID_REMOTE) && (header.uid[i]!=0) && (Actor::findById(header.uid[i])==0)) 
+                DEBUG("remote event [%d] pattern:%d, header:%d, id : %d",i, _pattern.uid[i] ,header.uid[i], header.id);
         if (
             ( _pattern.uid[i]==EB_UID_IGNORE )
             || ( _pattern.uid[i]==header.uid[i] )
             || ( _pattern.uid[i]==EB_UID_ANY  && header.uid[i]!=0 )
             || ( _pattern.uid[i]==EB_UID_LOCAL  && (Actor::findById(header.uid[i])!=0) )
-            || ( _pattern.uid[i]==EB_UID_REMOTE && (Actor::findById(header.uid[i])==0))
+            || ( _pattern.uid[i]==EB_UID_REMOTE &&  (header.uid[i]!=0) && (Actor::findById(header.uid[i])==0))
         ) continue;
         return false;
     }

@@ -25,11 +25,11 @@ void System::publishProps()
 {
     switch(_idxProps) {
     case 0 : {
-        eb.event(id(),H("hostname")).addKeyValue(H("data"),Sys::hostname());
+        eb.event(id(),H("hostname")).addKeyValue(H("data"),Sys::hostname()).addKeyValue(H("public"),true);
         break;
     }
     case 1 : {
-        eb.event(id(),H("upTime")).addKeyValue(H("data"),Sys::millis());
+        eb.event(id(),H("upTime")).addKeyValue(H("data"),Sys::millis()).addKeyValue(H("public"),true);
         break;
     }
     case 2 : {
@@ -40,11 +40,11 @@ void System::publishProps()
             data[3-i] = nr & 0xFF;
             nr = nr >>8;
         }
-        eb.event(id(),H("$chipId")).addKeyValue(H("$data"),bytes);
+        eb.event(id(),H("$chipId")).addKeyValue(H("$data"),bytes).addKeyValue(H("public"),true);
         break;
     }
     case 3 : {
-        eb.event(id(),H("heap")).addKeyValue(H("data"),ESP.getFreeHeap());
+        eb.event(id(),H("heap")).addKeyValue(H("data"),ESP.getFreeHeap()).addKeyValue(H("public"),true);
         break;
     }
 

@@ -61,13 +61,16 @@ void MqttJson::setup()
             (MethodHandler) &MqttJson::mqttToEb);
     eb.onEvent(_mqttId, H("disconnected")).call(this,
             (MethodHandler) &MqttJson::onEvent);
+    eb.onEvent(EB_UID_IGNORE,EB_UID_ANY).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
+
 //    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
     uid.add(labels,LABEL_COUNT);
 }
 //----------------------------------------------------------------------------------
 void MqttJson::sendPublicEvents(Cbor& msg)
 {
-    if ( eb.isPublicEvent()) {  // src actor is public
+    bool isPublic;
+    if ( msg.getKeyValue(H("public"),isPublic) && isPublic==true) {  // src actor is public
         this->ebToMqtt(msg);
     }
 }
@@ -316,6 +319,7 @@ void MqttJson::onEvent(Cbor& msg)
 {
 
     Str willTopic(TOPIC_LENGTH);
+    static Actor* currentActor;
     PT_BEGIN()
     ;
     goto CONNECTING;
@@ -348,23 +352,25 @@ CONNECTING : {
 
             PT_YIELD_UNTIL(timeout() || eb.isEvent(_mqttId, H("connected")) || eb.isReplyCorrect(_mqttId,H("connect")));
             if (!timeout()) {
+                currentActor = Actor::first();
                 goto SUBSCRIBE_REQUEST;
             }
         }
     }
 SUBSCRIBE_REQUEST: {
-        _topic = "dst/";
-        _topic += Sys::hostname();
-        _topic += "/#";
-        eb.request(_mqttId, H("subscribe"), id()).addKeyValue(
-            H("topic"), _topic);
-        eb.send();
-        timeout(3000);
-        PT_YIELD_UNTIL(
-            eb.isReply(_mqttId, H("subscribe")) || timeout() || eb.isEvent(_mqttId, H("disconnected")));
-        if (eb.isReplyCorrect(_mqttId, H("subscribe")) )
-            goto SLEEPING;
-        goto DISCONNECTING;
+     while ( currentActor != 0 ) {
+            _topic = "dst/";
+            _topic += currentActor->name();
+            eb.request(_mqttId, H("subscribe"), id()).addKeyValue(H("topic"), _topic);
+            eb.send();
+            timeout(3000);
+            PT_YIELD_UNTIL(
+                eb.isReply(_mqttId, H("subscribe")) || timeout() || eb.isEvent(_mqttId, H("disconnected")));
+            if (eb.isReplyCorrect(_mqttId, H("subscribe")) ) {
+                currentActor = currentActor->next();
+            }
+        }
+        goto SLEEPING;
     }
 
 SLEEPING: {
