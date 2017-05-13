@@ -130,6 +130,9 @@ public:
     Cbor& reply(uid_t dst,uid_t repl,uid_t src);
     Cbor& reply();
     Cbor& event(uid_t src,uid_t ev);
+    Cbor& publicEvent(uid_t src,uid_t ev) {
+        return event(src,ev).addKeyValue(H("public"),true);
+    };
     Cbor& empty();
     Cbor& clear();
     void defaultHandler(Actor* actor,Cbor& msg);

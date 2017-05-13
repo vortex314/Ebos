@@ -21,7 +21,7 @@ class MqttJson: public Actor
     Str _topic;
     Json _message;
     Actor* _actor;
-    Str _name;
+//    Str _name;
     uid_t _mqttId;
 
 public:
