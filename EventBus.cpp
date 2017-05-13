@@ -432,7 +432,7 @@ void EventBus::eventLoop()
         }
     }
 
-    while ((_queue.get(_rxd) == 0) ) { // handle all events
+    if ((_queue.get(_rxd) == 0) ) { // handle all events
         uint32_t subscribers=0;
         getHeader(_rxdHeader);
         for ( EventFilter* filter=firstFilter(); filter ; filter=filter->next() ) { // handle all matching filters

@@ -286,7 +286,7 @@ void MqttJson::cborToMqtt(Str& topic, Json& json, Cbor& cbor)
     topic.clear();
     json.clear();
 
-    if (cbor.gotoKey(EB_REQUEST) ) {
+    if (cbor.gotoKey(EB_REQUEST) || cbor.gotoKey(EB_REPLY)) {
         topic="dst/";
         addTopic(topic, cbor, EB_DST);
         json.addMap();
@@ -358,7 +358,7 @@ CONNECTING : {
         }
     }
 SUBSCRIBE_REQUEST: {
-     while ( currentActor != 0 ) {
+        while ( currentActor != 0 ) {
             _topic = "dst/";
             _topic += currentActor->name();
             eb.request(_mqttId, H("subscribe"), id()).addKeyValue(H("topic"), _topic);
@@ -366,35 +366,34 @@ SUBSCRIBE_REQUEST: {
             timeout(3000);
             PT_YIELD_UNTIL(
                 eb.isReply(_mqttId, H("subscribe")) || timeout() || eb.isEvent(_mqttId, H("disconnected")));
-            if (eb.isReplyCorrect(_mqttId, H("subscribe")) ) {
-                currentActor = currentActor->next();
-            }
-        }
-        goto SLEEPING;
-    }
-
-SLEEPING: {
-        while (true) {
-//            for (_actor = Actor::first(); _actor; _actor = _actor->next()) {
-//            _name = _actor->name();
-            _topic = "src/";
-            _topic += Sys::hostname();
-            _topic += ".";
-            _topic += "system";
-            _topic += "/alive";
-            _message.clear();
-            _message.add(true);
-            eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"), _topic).addKeyValue(H("message"), _message);
-            eb.send();
-            timeout(2000);
-
-            PT_YIELD_UNTIL( eb.isReplyCorrect(_mqttId, H("publish")) || timeout());
-            if (timeout()) {
+            if (!eb.isReplyCorrect(_mqttId, H("subscribe")) ) {
                 goto DISCONNECTING;
             }
-            timeout(8000);
-            PT_YIELD_UNTIL(timeout());
+            currentActor = currentActor->next();
         }
+        currentActor = Actor::first();
+        goto ALIVE;
+    }
+
+ALIVE: {
+        while ( currentActor != 0 ) {
+            _topic = "src/";
+            _topic += currentActor->name();
+            _topic += "/alive";
+            eb.request(_mqttId, H("publish"), id()).addKeyValue(H("topic"),_topic).addKeyValue(H("message"), "true");
+            eb.send();
+            timeout(3000);
+            PT_YIELD_UNTIL(
+                eb.isReply(_mqttId, H("publish")) || timeout() || eb.isEvent(_mqttId, H("disconnected")));
+            if (!eb.isReplyCorrect(_mqttId, H("publish")) ) {
+                goto DISCONNECTING;
+            }
+            timeout(2000);
+            PT_YIELD_UNTIL(timeout() );
+ //           currentActor = currentActor->next();
+        }
+        currentActor = Actor::first();
+        goto ALIVE;
     }
     PT_END()
     ;
