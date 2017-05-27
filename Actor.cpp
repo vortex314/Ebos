@@ -19,9 +19,9 @@ Actor::Actor(const char* name) {
 	_state = 0;
 	_ptLine = 0;
 	_next = 0;
-    _public=false;
-    _id=0;
-    _name = name;
+	_public = false;
+	_id = 0;
+	_name = name;
 //	setName(name);
 	if (first() == 0) {
 		setFirst(this);
@@ -31,16 +31,16 @@ Actor::Actor(const char* name) {
 }
 
 void Actor::setName(const char* name) {
-    Str* actorName=new Str(30);
-    *actorName =Sys::hostname();
-    *actorName+= ".";
-    *actorName += name;
-    _name = actorName->c_str();
-    _id = uid.hash(*actorName);
+	Str* actorName = new Str(30);
+	*actorName = Sys::hostname();
+	*actorName += ".";
+	*actorName += name;
+	_name = actorName->c_str();
+	_id = uid.hash(*actorName);
 //	_id = H(name);
 //	_name = name;
-    uid.add(_name);
-    LOGF(" new Actor %s  [%d]",_name,_id);
+	uid.add(_name);
+	LOGF(" new Actor %s  [%d]", _name, _id);
 }
 
 /*Actor::Actor(uint16_t id) {
@@ -55,12 +55,12 @@ void Actor::setName(const char* name) {
  last()->setNext(this);
  }
  }*/
- 
- uid_t Actor::id(){
-     if ( _id ) return _id;
-     setName(_name);
-     return _id;
- }
+
+uid_t Actor::id() {
+	if ( _id ) return _id;
+	setName(_name);
+	return _id;
+}
 
 Actor* Actor::last() {
 	Actor* cursor = first();
@@ -90,7 +90,7 @@ Actor::~Actor() {
 
 
 void Actor::onEvent(Cbor& cbor) {
-    ASSERT(false);
+	ASSERT(false);
 }
 
 uint64_t Actor::lowestTimeout() {
@@ -102,8 +102,8 @@ uint64_t Actor::lowestTimeout() {
 			la = cur;
 		}
 	}
-	if ( lt< (Sys::_upTime - 2000)) {
-        WARN(" timeout 2 sec in the past for Actor : %s ",la->name());
+	if ( lt < (Sys::_upTime - 2000)) {
+		WARN(" timeout 2 sec in the past for Actor : %s ", la->name());
 	}
 //    DEBUG(" lowest timeout actor : %s ",lowest->_name);
 	return lt;
@@ -111,7 +111,7 @@ uint64_t Actor::lowestTimeout() {
 
 Actor* Actor::findById(uint16_t id) {
 	for (Actor* cur = first(); cur; cur = cur->next()) {
- //       if ( cur->id()==0) DEBUG(" actor with id==0 : %s",cur->name());
+//       if ( cur->id()==0) DEBUG(" actor with id==0 : %s",cur->name());
 		if (cur->id() == id)
 			return cur;
 	}
