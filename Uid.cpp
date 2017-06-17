@@ -39,7 +39,7 @@ uid_t Uid::hash(Str& str)
 
 uid_t Uid::newLabel(Str& str,uid_t uid)
 {
-	DEBUG(" >>>>>>>>>>>>>>>>>>>>>>>>>>< new label %s:%d at %d ",str.c_str(),uid,_dynamic_current);
+//	DEBUG(" >>>>>>>>>>>>>>>>>>>>>>>>>>< new label %s:%d at %d ",str.c_str(),uid,_dynamic_current);
 	if ( _uids[_dynamic_current]) {
 		DEBUG(" free ");
 		free((void*)_labels[_dynamic_current]); // free old label
@@ -63,7 +63,7 @@ int Uid::uidIndex(uid_t uid)
 		if(_uids[i]==uid) {
 			return i;
 		} else if (_uids[i]==0) {
-			DEBUG(" %d not found after %d",uid,i);
+//			DEBUG(" %d not found after %d",uid,i);
 			break;
 		}
 	}

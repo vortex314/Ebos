@@ -249,7 +249,7 @@ bool EventBus::isRequest(uid_t dst,uid_t req)
 //
 bool EventBus::isRequest(uid_t req)
 {
-    return isRequest((uid_t)0,req);
+    return isRequest((uid_t)EB_UID_IGNORE,req);
 }
 
 

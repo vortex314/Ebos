@@ -376,6 +376,14 @@ SUBSCRIBE_REQUEST: {
     }
 
 ALIVE: {
+        while(true) {
+            timeout(3000);
+            PT_YIELD_UNTIL(
+                timeout() || eb.isEvent(_mqttId, H("disconnected")));
+            if (eb.isEvent(_mqttId, H("disconnected"))) {
+                goto DISCONNECTING;
+            }
+        }
         while ( currentActor != 0 ) {
             _topic = "src/";
             _topic += currentActor->name();
@@ -388,9 +396,9 @@ ALIVE: {
             if (!eb.isReplyCorrect(_mqttId, H("publish")) ) {
                 goto DISCONNECTING;
             }
-            timeout(2000);
+            timeout(20000);
             PT_YIELD_UNTIL(timeout() );
- //           currentActor = currentActor->next();
+//           currentActor = currentActor->next();
         }
         currentActor = Actor::first();
         goto ALIVE;

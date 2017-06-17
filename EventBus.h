@@ -72,6 +72,7 @@ public:
 #define EB_ERROR H("error")
 #define EB_REGISTER H("register")
 #define EB_ID H("id")
+#define EB_DATA H("data")
 #define EB_UID_IGNORE  0
 #define EB_UID_ANY  1
 #define EB_UID_LOCAL 2
