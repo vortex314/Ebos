@@ -341,12 +341,12 @@ CONNECTING : {
             willTopic+=Sys::hostname();
             willTopic+=".system/alive";
 
-            eb.request(_mqttId, H("connect"), id())
+            eb.request(_mqttId, H("connect"), id())/*
             .addKeyValue(H("clientId"),Sys::hostname())
             .addKeyValue(H("will_topic"),willTopic)
             .addKeyValue(H("will_message"),"false")
             .addKeyValue(H("keep_alive"),120)
-            .addKeyValue(H("prefix"),Sys::hostname());
+            .addKeyValue(H("prefix"),Sys::hostname())*/;
             eb.send();
             timeout(2000);
 
