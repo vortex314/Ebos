@@ -92,7 +92,7 @@ void Uid::add(const char** list,uint32_t max)   /* sizeof(list)/sizeof(char*)*/
 
 uid_t Uid::add(const char* s)
 {
-	uid_t uid;
+	uid_t uid=0;
 	// check if exist
 	for(uint32_t i=0; i<_maxConst; i++ ) {
 		if ( strcmp(s,_labels[i])==0) return _uids[i];

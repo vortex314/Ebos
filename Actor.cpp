@@ -97,13 +97,14 @@ void Actor::onEvent(Cbor& cbor) {
 
 uint64_t Actor::lowestTimeout() {
 	uint64_t lt = UINT64_MAX;
-	Actor* la;
+	Actor* la=0;
 	for (Actor* cur = first(); cur; cur = cur->next()) {
 		if (cur->_timeout < lt) {
 			lt = cur->_timeout;
 			la = cur;
 		}
 	}
+	if ( la==0) return 0;
 	if ( lt < (Sys::_upTime - 2000)) {
 		WARN(" timeout 2 sec in the past for Actor : %s ", la->name());
 	}

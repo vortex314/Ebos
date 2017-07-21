@@ -10,6 +10,10 @@ System::~System()
 {
 }
 
+void System::reset(){
+    esp_restart();
+}
+
 void System::init()
 {
 }
@@ -33,6 +37,7 @@ void System::publishProps()
         break;
     }
     case 2 : {
+        #ifdef ESP8266
         uint32_t nr=ESP.getChipId();
         uint8_t data[4];
         Bytes bytes(data,4);
@@ -41,6 +46,7 @@ void System::publishProps()
             nr = nr >>8;
         }
         eb.event(id(),H("$chipId")).addKeyValue(H("$data"),bytes).addKeyValue(H("public"),true);
+        #endif
         break;
     }
     case 3 : {
