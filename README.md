@@ -17,7 +17,7 @@ Messages contain the following data depending on the use case :
 - #dst, error ( int errno.h ) , id ( unique id of message for correlation )
 
 Fields have been enriched with a leading character to ease translation from JSON to CBOR.
-Fields starting with a '#' : indicate that an string enum field is following that can be hashed to pass on the EB.
+Fields starting with a '%' : indicate that an string enum field is following that can be hashed to pass on the EB.
 Fields starting with a '$' : indicate that a string hex field is following, will be transformed to a ByteArray.
 Fields starting with a '@' : indicate that a string in base64 is following, will be transformed to a ByteArray
 To ease state maintenance the services can be implemented with ProtoThreads

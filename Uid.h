@@ -44,18 +44,19 @@ class Uid
 	uint32_t _max;
 	uid_t* _uids;
 	const char** _labels;
-	uint32_t _dynamic_start;
-	uint32_t _dynamic_current;
-	uint32_t _maxConst;
+	uint32_t _index;
 public:
 	Uid(uint32_t max);
 	~Uid();
 //	 uid_t hash(const char* s);
 	uid_t hash(Str& str);
+	uid_t hash(const char* s);
 	const char* label(uid_t id);
 //	 const char* label(uint32_t id);
 	uid_t newLabel(Str& str,uid_t id );
-	uid_t add(Str& str );
+	uid_t newLabel(const char* str,uid_t id );
+	uid_t create(Str& str );
+	uid_t create(char* s );
 	uid_t add(const char* s);
 	void add(const char** s,uint32_t nr);
 	int uidIndex(uid_t id);

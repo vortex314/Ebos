@@ -12,6 +12,9 @@
 #include <Cbor.h>
 #include <EventBus.h>
 #include <Uid.h>
+#include <cJSON.h>
+
+
 
 
 //_______________________________________________________________________________________________________________
@@ -35,7 +38,8 @@ public:
 
     bool isHeaderField(uint16_t key);
     int nextHash(Str& str);
-    void jsonToCbor(Cbor& cbor, Json& json);
+    void mqttToCbor(Cbor& cbor, uid_t uid,Json& json);
+    void jsonToCbor(Cbor& cbor,cJSON* object) ;
     void cborToMqtt(Str& topic, Json& json, Cbor& cbor);
     void onEvent(Cbor& msg);
     void ebToMqtt(Cbor& msg);

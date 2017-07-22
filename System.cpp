@@ -80,6 +80,7 @@ void System::onEvent(Cbor& msg)
         uint32_t level;
         if ( msg.getKeyValue(H("now"),now)) {
             Sys::setNow(now);
+            eb.publicEvent(id(),H("now")).addKeyValue(H("now"),Sys::now());
         };
         if ( msg.getKeyValue(H("hostname"),hostname)) {
             Sys::hostname(hostname.c_str());
@@ -96,7 +97,7 @@ void System::onEvent(Cbor& msg)
         reset();
 
     } else if ( timeout()) {
-        publishProps();
+//        publishProps();
         timeout(20000);
     } else
 

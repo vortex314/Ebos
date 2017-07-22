@@ -64,11 +64,11 @@ public:
 
 } ;
 
-#define EB_DST H("#dst")
-#define EB_SRC H("#src")
-#define EB_REQUEST H("#request")
-#define EB_REPLY H("#reply")
-#define EB_EVENT H("#event")
+#define EB_DST H("%dst")
+#define EB_SRC H("%src")
+#define EB_REQUEST H("%request")
+#define EB_REPLY H("%reply")
+#define EB_EVENT H("%event")
 #define EB_ERROR H("error")
 #define EB_REGISTER H("register")
 #define EB_ID H("id")
