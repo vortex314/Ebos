@@ -128,256 +128,306 @@ int MqttJson::nextHash(Str& str) {
 //----------------------------------------------------------------------------------
 #include <cJSON.h>
 
-void MqttJson::jsonToCbor(Cbor& cbor, cJSON* object) {
+void MqttJson::jsonObjectToCbor(Cbor& cbor, cJSON* object) {
   cJSON* field = object->child;
   while (field) {
     uid_t ui = uid.create(field->string);
-    char* label = field->string;
-    if (label[0] == '$' && field->type == cJSON_String) {
-      Bytes bytes(1024);
-      Str str(0);
-      str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
-      str.parseHex(bytes);
-      cbor.addKeyValue(ui, bytes);
-    } else if (label[0] == '%' && field->type == cJSON_String) {
-      cbor.addKeyValue(ui, uid.create(field->valuestring));
-    } else if (field->type == cJSON_Number) {
-      cbor.addKeyValue(ui, field->valuedouble);
-    } else if (field->type == cJSON_False) {
-      cbor.addKeyValue(ui, false);
-    } else if (field->type == cJSON_True) {
-      cbor.addKeyValue(ui, true);
-    } else if (field->type == cJSON_String) {
-      Str str(0);
-      str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
-      cbor.addKeyValue(ui, str);
-    } else {
-    }
+    // char* label = field->string;
+    jsonToCbor(cbor, ui, field);
+    /*    if (label[0] == '$' && field->type == cJSON_String) {
+          Bytes bytes(1024);
+          Str str(0);
+          str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
+          str.parseHex(bytes);
+          cbor.addKeyValue(ui, bytes);
+        } else if (label[0] == '%' && field->type == cJSON_String) {
+          cbor.addKeyValue(ui, uid.create(field->valuestring));
+        } else if (field->type == cJSON_Number) {
+          cbor.addKeyValue(ui, field->valuedouble);
+        } else if (field->type == cJSON_False) {
+          cbor.addKeyValue(ui, false);
+        } else if (field->type == cJSON_True) {
+          cbor.addKeyValue(ui, true);
+        } else if (field->type == cJSON_String) {
+          Str str(0);
+          str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
+          cbor.addKeyValue(ui, str);
+        } else {
+        }*/
     field = field->next;
   }
 }
 
-  void MqttJson::mqttToCbor(Cbor & cbor, uid_t ui, Json & json) {
-    const char* label = uid.label(ui);
-    cJSON* field = cJSON_Parse(json.c_str());
-    //  INFO(" label :%s json:%s cjson x%X",label,json.c_str(),field);
-    if (field) {
-      //    INFO(" cjson.type : %d ",field->type);
-    }
-    // if no valid type found assume string
-    if (field == 0) field = cJSON_CreateString(json.c_str());
-
-    if (field->type == cJSON_Object) {
-      cbor.addKeyValue(EB_REQUEST, ui);
-      jsonToCbor(cbor, field);
-    } else {
-      cbor.addKeyValue(EB_REQUEST, H("set"));
-      if (label[0] == '$' && field->type == cJSON_String) {
-        Bytes bytes(1024);
-        Str str(0);
-        str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
-        str.parseHex(bytes);
-        cbor.addKeyValue(ui, bytes);
-      } else if (label[0] == '%' && field->type == cJSON_String) {
-        cbor.addKeyValue(ui, H(field->valuestring));
-      } else if (field->type == cJSON_Number) {
-        cbor.addKeyValue(ui, field->valuedouble);
-      } else if (field->type == cJSON_False) {
-        cbor.addKeyValue(ui, false);
-      } else if (field->type == cJSON_True) {
-        cbor.addKeyValue(ui, true);
-      } else if (field->type == cJSON_String) {
-        Str str(0);
-        str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
-        cbor.addKeyValue(ui, str);
-      } else {
-        WARN(" unknown combination json %d , %s ", field->type, label);
-      }
-    }
-    cJSON_Delete(field);
-    return;
+void MqttJson::jsonToCbor(Cbor& cbor, uid_t ui, cJSON* field) {
+  const char* label = uid.label(ui);
+  if (label[0] == '$' && field->type == cJSON_String) {
+    Bytes bytes(1024);
+    Str str(0);
+    str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
+    str.parseHex(bytes);
+    cbor.addKeyValue(ui, bytes);
+  } else if (label[0] == '%' && field->type == cJSON_String) {
+    cbor.addKeyValue(ui, uid.create(field->valuestring));
+  } else if (field->type == cJSON_Number) {
+    cbor.addKeyValue(ui, field->valuedouble);
+  } else if (field->type == cJSON_False) {
+    cbor.addKeyValue(ui, false);
+  } else if (field->type == cJSON_True) {
+    cbor.addKeyValue(ui, true);
+  } else if (field->type == cJSON_String) {
+    Str str(0);
+    str.map((uint8_t*)field->valuestring, strlen(field->valuestring));
+    cbor.addKeyValue(ui, str);
+  } else {
+    WARN(" unknown combination json %d , %s ", field->type, label);
   }
-  //------------------------------------------------------------------------------------------------
-  //
+}
 
-  void MqttJson::mqttToEb(Cbor & msg) {
-    if (msg.getKeyValue(H("topic"), _topic) &&
-        msg.getKeyValue(H("message"), (Bytes&)_message)) {
-      uid_t field[4] = {0, 0, 0, 0};  // dst/device/service/property
-      int i = 0;
-      uid_t v;
-      _topic.offset(0);
-      while ((v = nextHash(_topic)) && i < 4) {
-        field[i++] = v;
-      }
-//      INFO(" fields : %d %d %d %d ", field[0], field[1], field[2], field[3]);
-//      INFO(" fields : %s %s %s %s ", uid.label(field[0]), uid.label(field[1]),
-//           uid.label(field[2]), uid.label(field[3]));
+//------------------------------------------------------------------------------------------------
+//
 
-      if ((field[0] == H("dst") && (field[1] == H(Sys::hostname()))) &&
-          Actor::findById(field[2])) {
-        Cbor& cbor = eb.empty();
-        cbor.addKeyValue(EB_DST, field[2]);
-        mqttToCbor(cbor, field[3], _message);
+uid_t MqttJson::getRemoteSrcUid(Str& topic) {
+  int pos[] = {0, 0, 0};
+  int posIndex = 0;
+  int index = 0;
+  topic.offset(0);
+  while (topic.hasData()) {
+    char ch = topic.read();
+    if (ch == '/') {
+      pos[posIndex++] = index;
+      if (posIndex == 3) break;
+    }
+    index++;
+  }
+  if (pos[2] == 0) return 0;
+  Str srcService(40);
+  for (int i = pos[0] + 1; i < pos[2]; i++) {
+    srcService.write(topic.peek(i));
+  }
+  return uid.create(srcService);
+}
+
+void MqttJson::mqttToEb(Cbor& msg) {
+  if (msg.getKeyValue(H("topic"), _topic) &&
+      msg.getKeyValue(H("message"), (Bytes&)_message)) {
+    uid_t field[4] = {0, 0, 0, 0};  // dst/device/service/property
+    int i = 0;
+    uid_t v;
+    _topic.offset(0);
+    while ((v = nextHash(_topic)) && i < 4) {
+      field[i++] = v;
+    }
+    cJSON* json = cJSON_Parse(_message.c_str());
+    if (json == 0) json = cJSON_CreateString(_message.c_str());
+    //      INFO(" fields : %d %d %d %d ", field[0], field[1], field[2],
+    //      field[3]);
+    //      INFO(" fields : %s %s %s %s ", uid.label(field[0]),
+    //      uid.label(field[1]),
+    //           uid.label(field[2]), uid.label(field[3]));
+
+    if ((field[0] == H("dst")) && Actor::findById(field[2])) {
+      if (json->type == cJSON_Object) {
+        Cbor& cbor = eb.empty()
+                         .addKeyValue(EB_DST, field[2])
+                         .addKeyValue(EB_REQUEST, field[3]);
+        jsonObjectToCbor(cbor, json);
         eb.send();
       } else {
-        WARN(" wrong actor ");
+        Cbor& cbor = eb.empty()
+                         .addKeyValue(EB_DST, field[2])
+                         .addKeyValue(EB_REQUEST, H("set"));
+        jsonToCbor(cbor, field[3], json);
+        eb.send();
       }
+
+    } else if (field[0] == H("src")) {
+      // extract field 1 and field 2 for src address
+      uid_t srcUid = getRemoteSrcUid(_topic);
+      Cbor& cbor = eb.event(srcUid, field[3]);
+      jsonToCbor(cbor, field[3], json);
+      eb.send();
+
     } else {
-      WARN(" wrong mqtt layout ");
+      WARN(" wrong actor ");
     }
+    cJSON_Delete(json);
+  } else {
+    WARN(" wrong mqtt layout ");
   }
+}
 
-  //__________________________________________________________________________________________________
-  //
-  void MqttJson::addData(Json & json, Cbor & cbor) {
-    //	Cbor::PackType type;
-    //        Cbor::CborVariant variant;
-    cbor.offset(0);
-    uid_t value;
+//__________________________________________________________________________________________________
+//
 
-    //    json.addKey("length").add(cbor.length());
-    if (cbor.gotoKey(H("data"))) {
-      cbor.tokenToString(json);
-    } else if (cbor.gotoKey(H("$data"))) {
-      cbor.tokenToString(json);
-    } else if (cbor.gotoKey(H("#data"))) {
-      if (cbor.get(value)) {
-        if (uid.label(value)) {
-          json.add(uid.label(value));
-        } else {
-          json.add("enum no label");
-        }
-      } else {
-        json.add(" expected enum ");
-      }
-    } else if (cbor.gotoKey(H("@data"))) {
-      json.add(" Base64 data top implement ");
+cJSON* cborToJson(const char* name, Cbor& cbor) {
+  cJSON* field = 0;
+  Cbor::PackType type;
+  cbor.peekToken(type);
+  if (type == Cbor::P_PINT && name[0] == '%') {
+    int value;
+    cbor.get(value);
+    field = cJSON_CreateString(uid.label(value));
+  } else if (type == Cbor::P_BYTES &&
+             name[0] == '$') {  // default cbor behaviour
+    Str str(1024);
+    Bytes bytes(1024);
+    cbor.get(bytes);
+    str.appendHex(bytes);
+    field = cJSON_CreateString(str.c_str());
+  } else if (type == Cbor::P_DOUBLE) {
+    double d;
+    cbor.get(d);
+    field = cJSON_CreateNumber(d);
+  } else if (type == Cbor::P_BOOL) {
+    bool b;
+    cbor.get(b);
+    field = cJSON_CreateBool(b);
+  } else if (type == Cbor::P_PINT) {
+    uint64_t d;
+    cbor.get(d);
+    field = cJSON_CreateNumber(d);
+  } else if (type == Cbor::P_NINT) {
+    int d;
+    cbor.get(d);
+    field = cJSON_CreateNumber(d);
+  }
+  return field;
+}
+//=================================================================================================
+void MqttJson::addMessageData(Str& json, Cbor& cbor) {
+  //	Cbor::PackType type;
+  //        Cbor::CborVariant variant;
+  cbor.offset(0);
+  cJSON* data = 0;
+  uid_t key;
+  cbor.getKeyValue(EB_EVENT, key);
+  const char* label = uid.label(key);
+  //    json.addKey("length").add(cbor.length());
+  if (cbor.gotoKey(H("data"))) {
+    data = cborToJson(label, cbor);
+  } else if (cbor.gotoKey(H("$data"))) {
+    data = cborToJson(label, cbor);
+  } else if (cbor.gotoKey(H("%data"))) {
+    data = cborToJson(label, cbor);
+  }
+  if (data) {
+    char* buffer = cJSON_Print(data);
+    json = buffer;
+    cJSON_Delete(data);
+    free(buffer);
+  }
+}
+
+//__________________________________________________________________________________________________
+//
+void MqttJson::addMessageObject(Str& json, Cbor& cbor) {
+  //	Cbor::PackType type;
+  //        Cbor::CborVariant variant;
+  cbor.offset(0);
+  uid_t key;
+  cJSON* object = cJSON_CreateObject();
+
+  //    json.addKey("length").add(cbor.length());
+
+  while (cbor.hasData()) {
+    if (cbor.get(key)) {
+      const char* name = uid.label(key);
+      cJSON_AddItemToObject(object, name, cborToJson(name, cbor));
     } else {
-      json.add(" no data field ");
+      WARN("expected int key");
     }
   }
+  char* print = cJSON_Print(object);
+  cJSON_Delete(object);
+  json = print;
+  free(print);
+}
 
-  //__________________________________________________________________________________________________
-  //
-  void MqttJson::addMessageData(Json & json, Cbor & cbor) {
-    //	Cbor::PackType type;
-    //        Cbor::CborVariant variant;
-    cbor.offset(0);
-    uid_t key, value;
+//__________________________________________________________________________________________________
+//
+void MqttJson::cborToMqtt(Str& topic, Str& message, Cbor& cbor) {
+  topic.clear();
+  message.clear();
 
-    //    json.addKey("length").add(cbor.length());
-
-    while (cbor.hasData()) {
-      if (cbor.get(key)) {
-        const char* name = uid.label(key);
-        json.addKey(name);
-        if (name[0] == '%') {
-          if (cbor.get(value)) {
-            if (uid.label(value)) {
-              json.add(uid.label(value));
-            } else {
-              json.add("enum no label");
-            }
-          } else {
-            json.add(" expected enum ");
-          }
-
-        } else if (name[0] == '@') {  // add bytes in Base64
-          json.add(" @ not implemented yet ");
-          cbor.skipToken();
-        } else {  // default cbor behaviour
-          json.addComma();
-          cbor.tokenToString(json);
-        }
-      } else {
-        json.add("expected int key");
-      }
-    }
+  if (cbor.gotoKey(EB_REQUEST) || cbor.gotoKey(EB_REPLY)) {
+    topic = "dst/";
+    addTopic(topic, cbor, EB_DST);
+    addMessageObject(message, cbor);
+  } else if (cbor.gotoKey(EB_EVENT)) {
+    topic = "src/";
+    topic += Sys::hostname();
+    topic += "/";
+    addTopic(topic, cbor, EB_SRC);
+    topic += "/";
+    addTopic(topic, cbor, EB_EVENT);
+    addMessageData(message, cbor);
+    //        cbor.getKeyValue(H("data"),json);
   }
+}
+//--------------------------------------------------------------------------------------------------
+//
+void MqttJson::ebToMqtt(Cbor& msg) {
+  uid_t dst;
+  if (msg.getKeyValue(EB_DST, dst) && dst == _mqttId) return;
+  cborToMqtt(_topic, _message, msg);
 
-  //__________________________________________________________________________________________________
-  //
-  void MqttJson::cborToMqtt(Str & topic, Json & json, Cbor & cbor) {
-    topic.clear();
-    json.clear();
+  eb.request(_mqttId, H("publish"), id())
+      .addKeyValue(H("topic"), _topic)
+      .addKeyValue(H("message"), _message);
+  eb.send();
+}
+//__________________________________________________________________________________________________
+//
+void MqttJson::onEvent(Cbor& msg) {
+  Str willTopic(TOPIC_LENGTH);
 
-    if (cbor.gotoKey(EB_REQUEST) || cbor.gotoKey(EB_REPLY)) {
-      topic = "dst/";
-      addTopic(topic, cbor, EB_DST);
-      json.addMap();
-      addMessageData(json, cbor);
-      json.addBreak();
-    } else if (cbor.gotoKey(EB_EVENT)) {
-      topic = "src/";
-      addTopic(topic, cbor, EB_SRC);
-      topic += "/";
-      addTopic(topic, cbor, EB_EVENT);
-      addData(json, cbor);
-      //        cbor.getKeyValue(H("data"),json);
-    }
-  }
-  //--------------------------------------------------------------------------------------------------
-  //
-  void MqttJson::ebToMqtt(Cbor & msg) {
-    uid_t dst;
-    if (msg.getKeyValue(EB_DST, dst) && dst == _mqttId) return;
-    cborToMqtt(_topic, _message, msg);
-
-    eb.request(_mqttId, H("publish"), id())
-        .addKeyValue(H("topic"), _topic)
-        .addKeyValue(H("message"), _message);
+  PT_BEGIN();
+  goto WAIT_CONNECT;
+DISCONNECTING : {
+  while (true) {
+    timeout(2000);
+    PT_YIELD_UNTIL(timeout());
+    eb.request(_mqttId, H("disconnect"), id());
     eb.send();
+    timeout(2000);
+    PT_YIELD_UNTIL(timeout() || eb.isReplyCorrect(_mqttId, H("disconnect")));
+    if (eb.isReplyCorrect(_mqttId, H("disconnect"))) goto WAIT_CONNECT;
   }
-  //__________________________________________________________________________________________________
-  //
-  void MqttJson::onEvent(Cbor & msg) {
-    Str willTopic(TOPIC_LENGTH);
+}
+WAIT_CONNECT : {
+  timeout(UINT32_MAX);
+  PT_YIELD_UNTIL(eb.isEvent(_mqttId, H("connected")));
+  goto CONNECTED;
+}
 
-    PT_BEGIN();
-    goto WAIT_CONNECT;
-  DISCONNECTING : {
-    while (true) {
-      timeout(2000);
-      PT_YIELD_UNTIL(timeout());
-      eb.request(_mqttId, H("disconnect"), id());
-      eb.send();
-      timeout(2000);
-      PT_YIELD_UNTIL(timeout() || eb.isReplyCorrect(_mqttId, H("disconnect")));
-      if (eb.isReplyCorrect(_mqttId, H("disconnect"))) goto WAIT_CONNECT;
+CONNECTED : {
+  while (true) {
+    _topic = "dst/";
+    _topic += Sys::hostname();
+    _topic += "/#";
+    eb.request(_mqttId, H("subscribe"), id()).addKeyValue(H("topic"), _topic);
+    eb.send();
+    _topic = "src/global/clock/epoch";
+    eb.request(_mqttId, H("subscribe"), id()).addKeyValue(H("topic"), _topic);
+    eb.send();
+    timeout(3000);
+    PT_YIELD_UNTIL(eb.isReply(_mqttId, H("subscribe")) || timeout() ||
+                   eb.isEvent(_mqttId, H("disconnected")));
+    if (eb.isReplyCorrect(_mqttId, H("subscribe"))) {
+      goto ALIVE;
     }
+    goto DISCONNECTING;
   }
-  WAIT_CONNECT : {
+}
+
+ALIVE : {
+  while (true) {
     timeout(UINT32_MAX);
-    PT_YIELD_UNTIL(eb.isEvent(_mqttId, H("connected")));
-    goto CONNECTED;
-  }
-
-  CONNECTED : {
-    while (true) {
-      _topic = "dst/";
-      _topic += Sys::hostname();
-      _topic += "/#";
-      eb.request(_mqttId, H("subscribe"), id()).addKeyValue(H("topic"), _topic);
-      eb.send();
-      timeout(3000);
-      PT_YIELD_UNTIL(eb.isReply(_mqttId, H("subscribe")) || timeout() ||
-                     eb.isEvent(_mqttId, H("disconnected")));
-      if (eb.isReplyCorrect(_mqttId, H("subscribe"))) {
-        goto ALIVE;
-      }
-      goto DISCONNECTING;
+    PT_YIELD_UNTIL(eb.isEvent(_mqttId, H("disconnected")));
+    if (eb.isEvent(_mqttId, H("disconnected"))) {
+      goto WAIT_CONNECT;
     }
   }
-
-  ALIVE : {
-    while (true) {
-      timeout(UINT32_MAX);
-      PT_YIELD_UNTIL(eb.isEvent(_mqttId, H("disconnected")));
-      if (eb.isEvent(_mqttId, H("disconnected"))) {
-        goto WAIT_CONNECT;
-      }
-    }
-  }
-    PT_END();
-  }
+}
+  PT_END();
+}

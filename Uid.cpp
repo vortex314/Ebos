@@ -110,6 +110,7 @@ uid_t Uid::create(Str& str) {
     const char* label = (const char*)malloc(str.length() + 1);
     strcpy((char*)label, str.c_str());
     uid = add(label);
+    INFO(" new label '%s' : %d ", label, uid);
   }
   return uid;
 }

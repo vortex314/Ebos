@@ -392,7 +392,8 @@ void EventBus::eventLoop() {
       actor->onEvent(_rxd);
     }
     uint32_t delta = Sys::millis() - startTime;
-    if (delta > 10) WARN(" slow Actor %s : %d msec", actor->name(), delta);
+    if (delta > 10)
+      WARN(" slow Actor %s : %d msec on timeout.", actor->name(), delta);
   }
 
   if ((_queue.get(_rxd) == 0)) {  // handle all events
