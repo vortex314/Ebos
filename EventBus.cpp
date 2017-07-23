@@ -113,15 +113,15 @@ Cbor& EventBus::reply() {
 }
 
 void EventBus::send() {
-  _queue.put(_txd);
+  if (_queue.put(_txd) != E_OK) WARN(" Eventbus full !!");
   _txd.clear();
 }
 
 void EventBus::publish(Cbor& cbor) {
   Cbor msg(0);
-  _queue.putMap(msg);
+  if (_queue.putMap(msg)) WARN(" Eventbus full !!");
   msg.append(cbor);
-  _queue.putRelease(msg);
+  if (_queue.putRelease(msg)) WARN(" Eventbus full !!");
 }
 
 EventFilter& EventBus::onAny() {

@@ -115,7 +115,7 @@ uid_t Uid::create(Str& str) {
   return uid;
 }
 
-uid_t Uid::create(char* s) {
+uid_t Uid::create(const char* s) {
   uid_t uid = H(s);
   if (uidIndex(uid) < 0) {
     const char* label = (const char*)malloc(strlen(s) + 1);

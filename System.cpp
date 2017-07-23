@@ -1,4 +1,5 @@
 #include "System.h"
+#include "Property.h"
 #include "Sys.h"
 
 System::System(const char* name) : Actor(name) { _idxProps = 0; }
@@ -7,65 +8,63 @@ System::~System() {}
 
 void System::reset() { esp_restart(); }
 
+static const char* labels[] = {"hostname",  "upTime",   "heap",
+                               "processor", "hardware", "version",
+                               "alive",     "cpu",      "sdk"};
+
+char info[100];
+const char* getVersion() { return __FILE__ " " __DATE__ " " __TIME__; };
+uint32_t getFreeHeap() { return ESP.getFreeHeap(); };
+const char* getHostname(void) { return Sys::hostname(); };
+uint64_t getUpTime() { return Sys::millis(); };
+const char* getCpu() {
+  esp_chip_info_t chip;
+  esp_chip_info(&chip);
+
+  sprintf(info, "ESP32 %s %s %s cores : %d revision : 0x%X ",
+          chip.features & CHIP_FEATURE_WIFI_BGN ? "WIFI" : "",
+          chip.features & CHIP_FEATURE_BLE ? "/BLE" : "",
+          chip.features & CHIP_FEATURE_BT ? "/BT" : "", chip.cores,
+          chip.revision);
+  return info;
+}
+const char* getSdk() { return ESP.getSdkVersion(); }
+const char* getHardware() {
+  sprintf(info, "Flash %dMB %dMhz, CPU %dMHz", ESP.getFlashChipSize() / 1048576,
+          ESP.getFlashChipSpeed() / 1000000, ESP.getCpuFreqMHz());
+  return info;
+}
+
+bool alive = true;
+
 void System::init() {}
 void System::setup() {
   eb.onDst(H("system")).call(this);
+  uid.add(labels, sizeof(labels) / sizeof(const char*));
+
+  Property<bool>::build(alive, id(), H("alive"), 5000);
+  Property<const char*>::build(getHostname, id(), H("hostname"), 20000);
+  Property<uint64_t>::build(getUpTime, id(), H("upTime"), 5000);
+  Property<const char*>::build(getCpu, id(), H("cpu"), 20000);
+  Property<uint32_t>::build(getFreeHeap, id(), H("heap"), 5000);
+  Property<const char*>::build(getSdk, id(), H("sdk"), 20000);
+  Property<const char*>::build(getHardware, id(), H("hardware"), 20000);
+
   timeout(5000);
 }
 
 void System::publishProps() {
-  switch (_idxProps) {
-    case 0: {
-      eb.event(id(), H("hostname"))
-          .addKeyValue(H("data"), Sys::hostname())
-          .addKeyValue(H("public"), true);
-      break;
-    }
-    case 1: {
-      eb.event(id(), H("upTime"))
-          .addKeyValue(H("data"), Sys::millis())
-          .addKeyValue(H("public"), true);
-      break;
-    }
-    case 2: {
-#ifdef ESP8266
-      uint32_t nr = ESP.getChipId();
-      uint8_t data[4];
-      Bytes bytes(data, 4);
-      for (int i = 0; i < 4; i++) {
-        data[3 - i] = nr & 0xFF;
-        nr = nr >> 8;
-      }
-      eb.event(id(), H("$chipId"))
-          .addKeyValue(H("$data"), bytes)
-          .addKeyValue(H("public"), true);
-#endif
-      break;
-    }
-    case 3: {
-      eb.event(id(), H("heap"))
-          .addKeyValue(H("data"), ESP.getFreeHeap())
-          .addKeyValue(H("public"), true);
-      break;
-    }
+  PropertyBase* readyProperty = PropertyBase::nextReady();
+  if (readyProperty) {
+    readyProperty->addEventCbor(eb.empty());
+    eb.send();
   }
-  eb.send();
-  if (++_idxProps == 4) _idxProps = 0;
 }
 
 void System::onEvent(Cbor& msg) {
-  if (eb.isRequest(H("props"))) {
-    eb.reply()
-        .addKeyValue(H("hostname"), Sys::hostname())
-        .addKeyValue(H("upTime"), Sys::millis())
-        .addKeyValue(H("bootTime"), Sys::now() - Sys::millis())
-#ifdef ESP8266
-        .addKeyValue(H("chip_id"), ESP.getChipId())
-        .addKeyValue(H("heap"), ESP.getFreeHeap())
-#endif
-        ;
-    eb.send();
-
+  if (timeout()) {
+    publishProps();
+    timeout(100);
   } else if (eb.isRequest(H("set"))) {
     uint64_t now;
     Str hostname(20);
@@ -83,15 +82,9 @@ void System::onEvent(Cbor& msg) {
 
     eb.reply().addKeyValue(EB_ERROR, E_OK);
     eb.send();
-
   } else if (eb.isRequest(H("reset"))) {
     reset();
-
-  } else if (timeout()) {
-    publishProps();
-    timeout(20000);
   } else
-
     eb.defaultHandler(this, msg);
 }
 

@@ -40,7 +40,10 @@ h(field) & addKeyValue(h(field),type)
  */
 
 #include <MqttJson.h>
+#include <Property.h>
 #include "ebos_labels.h"
+
+static uint32_t rcvCounter = 0;
 
 MqttJson::MqttJson(const char* name, uint32_t jsonSize)
     : Actor(name),
@@ -66,6 +69,7 @@ void MqttJson::setup() {
 
   //    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
   uid.add(labels, LABEL_COUNT);
+  Property<uint32_t>::build(rcvCounter, id(), H("rcv"), 2000);
 }
 //----------------------------------------------------------------------------------
 void MqttJson::sendPublicEvents(Cbor& msg) {
@@ -208,7 +212,7 @@ uid_t MqttJson::getRemoteSrcUid(Str& topic) {
 }
 
 void MqttJson::mqttToEb(Cbor& msg) {
-  if (msg.getKeyValue(H("topic"), _topic) &&
+    if (msg.getKeyValue(H("topic"), _topic) &&
       msg.getKeyValue(H("message"), (Bytes&)_message)) {
     uid_t field[4] = {0, 0, 0, 0};  // dst/device/service/property
     int i = 0;
@@ -227,6 +231,7 @@ void MqttJson::mqttToEb(Cbor& msg) {
 
     if ((field[0] == H("dst")) && Actor::findById(field[2])) {
       if (json->type == cJSON_Object) {
+        rcvCounter++;
         Cbor& cbor = eb.empty()
                          .addKeyValue(EB_DST, field[2])
                          .addKeyValue(EB_REQUEST, field[3]);
@@ -290,6 +295,10 @@ cJSON* cborToJson(const char* name, Cbor& cbor) {
     int d;
     cbor.get(d);
     field = cJSON_CreateNumber(d);
+  } else if (type == Cbor::P_STRING) {
+    Str str(1024);
+    cbor.get(str);
+    field = cJSON_CreateString(str.c_str());
   }
   return field;
 }
@@ -303,15 +312,11 @@ void MqttJson::addMessageData(Str& json, Cbor& cbor) {
   cbor.getKeyValue(EB_EVENT, key);
   const char* label = uid.label(key);
   //    json.addKey("length").add(cbor.length());
-  if (cbor.gotoKey(H("data"))) {
-    data = cborToJson(label, cbor);
-  } else if (cbor.gotoKey(H("$data"))) {
-    data = cborToJson(label, cbor);
-  } else if (cbor.gotoKey(H("%data"))) {
+  if (cbor.gotoKey(key)) {
     data = cborToJson(label, cbor);
   }
   if (data) {
-    char* buffer = cJSON_Print(data);
+    char* buffer = cJSON_PrintUnformatted(data);
     json = buffer;
     cJSON_Delete(data);
     free(buffer);
@@ -332,12 +337,23 @@ void MqttJson::addMessageObject(Str& json, Cbor& cbor) {
   while (cbor.hasData()) {
     if (cbor.get(key)) {
       const char* name = uid.label(key);
-      cJSON_AddItemToObject(object, name, cborToJson(name, cbor));
+      if (key == EB_SRC) {  // extend src with device name
+        uid_t src;
+        cbor.get(src);
+        Str srcLabel(100);
+        srcLabel = Sys::hostname();
+        srcLabel += "/";
+        srcLabel += uid.label(src);
+        cJSON_AddItemToObject(object, name,
+                              cJSON_CreateString(srcLabel.c_str()));
+      } else {
+        cJSON_AddItemToObject(object, name, cborToJson(name, cbor));
+      }
     } else {
       WARN("expected int key");
     }
   }
-  char* print = cJSON_Print(object);
+  char* print = cJSON_PrintUnformatted(object);
   cJSON_Delete(object);
   json = print;
   free(print);
@@ -366,6 +382,7 @@ void MqttJson::cborToMqtt(Str& topic, Str& message, Cbor& cbor) {
 }
 //--------------------------------------------------------------------------------------------------
 //
+
 void MqttJson::ebToMqtt(Cbor& msg) {
   uid_t dst;
   if (msg.getKeyValue(EB_DST, dst) && dst == _mqttId) return;
