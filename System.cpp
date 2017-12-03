@@ -1,22 +1,43 @@
 #include "System.h"
-#include "Property.h"
+#include <Property.h>
 #include "Sys.h"
+//============================================================   STM32
 
-System::System(const char* name) : Actor(name) { _idxProps = 0; }
+#ifdef STM32F1
+void System::reset() {}
+#endif
+  //============================================================   ESP8266
 
-System::~System() {}
+#ifdef ESP8266
+extern "C" void __real_system_restart_local();
+
+void System::reset() { __real_system_restart_local(); }
+#endif
+  //============================================================   LINUX
+
+#ifdef __linux__
+void System::reset() {}
+#endif
+  //============================================================   ESP32 IDF
+
+#ifdef ESP32_IDF
+
+const char* getCpu() { return "ESP32"; }
+uint32_t getFreeHeap() { return 0; }
+
+const char* getSdk() { return "1.2.3"; }
+const char* getHardware() { return "SDK-xxx"; }
+void System::reset() { FATAL("Resetting.... ");while(true); };
+
+#endif
+  //============================================================   ESP32 ARDUINO
+
+#ifdef ESP32_ARDUINO
+
+uint32_t getFreeHeap() { return ESP.getFreeHeap(); };
 
 void System::reset() { esp_restart(); }
 
-static const char* labels[] = {"hostname",  "upTime",   "heap",
-                               "processor", "hardware", "version",
-                               "alive",     "cpu",      "sdk"};
-
-char info[100];
-const char* getVersion() { return __FILE__ " " __DATE__ " " __TIME__; };
-uint32_t getFreeHeap() { return ESP.getFreeHeap(); };
-const char* getHostname(void) { return Sys::hostname(); };
-uint64_t getUpTime() { return Sys::millis(); };
 const char* getCpu() {
   esp_chip_info_t chip;
   esp_chip_info(&chip);
@@ -28,12 +49,31 @@ const char* getCpu() {
           chip.revision);
   return info;
 }
+
 const char* getSdk() { return ESP.getSdkVersion(); }
+
 const char* getHardware() {
   sprintf(info, "Flash %dMB %dMhz, CPU %dMHz", ESP.getFlashChipSize() / 1048576,
           ESP.getFlashChipSpeed() / 1000000, ESP.getCpuFreqMHz());
   return info;
 }
+
+#endif
+//=====================================================================================
+
+System::System(const char* name) : Actor(name) { _idxProps = 0; }
+
+System::~System() {}
+
+static const char* labels[] = {"hostname",  "upTime",   "heap",
+                               "processor", "hardware", "version",
+                               "alive",     "cpu",      "sdk"};
+
+char info[100];
+const char* getVersion() { return __FILE__ " " __DATE__ " " __TIME__; };
+
+const char* getHostname(void) { return Sys::hostname(); };
+uint64_t getUpTime() { return Sys::millis(); };
 
 bool alive = true;
 
@@ -46,7 +86,7 @@ void System::setup() {
   Property<const char*>::build(getHostname, id(), H("hostname"), 20000);
   Property<uint64_t>::build(getUpTime, id(), H("upTime"), 5000);
   Property<const char*>::build(getCpu, id(), H("cpu"), 20000);
-  Property<uint32_t>::build(getFreeHeap, id(), H("heap"), 5000);
+  Property<uint32_t>::build(Sys::getFreeHeap, id(), H("heap"), 5000);
   Property<const char*>::build(getSdk, id(), H("sdk"), 20000);
   Property<const char*>::build(getHardware, id(), H("hardware"), 20000);
 
@@ -87,17 +127,3 @@ void System::onEvent(Cbor& msg) {
   } else
     eb.defaultHandler(this, msg);
 }
-
-#ifdef STM32F1
-void System::reset() {}
-#endif
-
-#ifdef ESP8266
-extern "C" void __real_system_restart_local();
-
-void System::reset() { __real_system_restart_local(); }
-#endif
-
-#ifdef __linux__
-void System::reset() {}
-#endif

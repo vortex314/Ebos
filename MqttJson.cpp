@@ -40,7 +40,7 @@ h(field) & addKeyValue(h(field),type)
  */
 
 #include <MqttJson.h>
-#include <Property.h>
+
 #include "ebos_labels.h"
 
 static uint32_t rcvCounter = 0;
@@ -69,7 +69,7 @@ void MqttJson::setup() {
 
   //    eb.onEvent(0,1).call(this,(MethodHandler) &MqttJson::sendPublicEvents);
   uid.add(labels, LABEL_COUNT);
-  Property<uint32_t>::build(rcvCounter, id(), H("rcv"), 2000);
+  //  Property<uint32_t>::build(rcvCounter, id(), H("rcv"), 2000);
 }
 //----------------------------------------------------------------------------------
 void MqttJson::sendPublicEvents(Cbor& msg) {
@@ -79,7 +79,7 @@ void MqttJson::sendPublicEvents(Cbor& msg) {
     this->ebToMqtt(msg);
   }
 }
-//----------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------
 
 #define CNT 100
 bool MqttJson::addHeader(Json& json, Cbor& cbor, uid_t key) {
@@ -212,7 +212,7 @@ uid_t MqttJson::getRemoteSrcUid(Str& topic) {
 }
 
 void MqttJson::mqttToEb(Cbor& msg) {
-    if (msg.getKeyValue(H("topic"), _topic) &&
+  if (msg.getKeyValue(H("topic"), _topic) &&
       msg.getKeyValue(H("message"), (Bytes&)_message)) {
     uid_t field[4] = {0, 0, 0, 0};  // dst/device/service/property
     int i = 0;
@@ -279,6 +279,10 @@ cJSON* cborToJson(const char* name, Cbor& cbor) {
     cbor.get(bytes);
     str.appendHex(bytes);
     field = cJSON_CreateString(str.c_str());
+  } else if (type == Cbor::P_FLOAT) {
+    float f;
+    cbor.get(f);
+    field = cJSON_CreateNumber(f);
   } else if (type == Cbor::P_DOUBLE) {
     double d;
     cbor.get(d);
@@ -299,6 +303,8 @@ cJSON* cborToJson(const char* name, Cbor& cbor) {
     Str str(1024);
     cbor.get(str);
     field = cJSON_CreateString(str.c_str());
+  } else {
+    ERROR(" unknown type");
   }
   return field;
 }
