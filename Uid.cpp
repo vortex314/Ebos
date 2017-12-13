@@ -18,51 +18,12 @@ Uid::~Uid() {}
 
 uid_t Uid::hash(const char* str) {
   return add(str);
-  /*  const char* s = str;
-    uint32_t hh = FNV_OFFSET;
-
-    while (*s) {
-      hh = hh * FNV_PRIME;
-      hh = hh ^ *s;
-      s++;
-    };
-    uid_t uid = hh & FNV_MASK;
-
-    if (uidIndex(uid) < 0) {
-      INFO(" hash %d not found for '%s'", uid, str);
-      newLabel(str, uid);
-    }
-    return uid;*/
 }
 
 uid_t Uid::hash(Str& str) {
   return add(str.c_str());
-  /* uint32_t hh = FNV_OFFSET;
-   str.offset(0);
-   while (str.hasData()) {
-     hh = hh * FNV_PRIME;
-     hh = hh ^ str.read();
-   }
-   uid_t uid = hh & FNV_MASK;
-   if (uidIndex(uid) < 0) {
-     //   INFO(" hash %d not found for '%s'", uid,str.c_str());
-     newLabel(str, uid);
-   }
-   return uid;*/
-}
-/*
-uid_t Uid::newLabel(const char* label, uid_t uid) {
-  add(label);
-  return uid;
 }
 
-uid_t Uid::newLabel(Str& str, uid_t uid) {
-  const char* label = (const char*)malloc(str.length() + 1);
-  strcpy((char*)label, str.c_str());
-  newLabel(label, uid);
-  return uid;
-}
-*/
 int Uid::uidIndex(uid_t uid) {
   for (uint32_t i = 0; i < _index; i++) {
     if (_uids[i] == uid) {

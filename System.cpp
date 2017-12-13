@@ -11,6 +11,12 @@ void System::reset() {}
 #ifdef ESP8266
 extern "C" void __real_system_restart_local();
 
+const char* getCpu() { return "ESP8266"; }
+uint32_t getFreeHeap() { return 0; }
+
+const char* getSdk() { return "1.2.3"; }
+const char* getHardware() { return "SDK-xxx"; }
+
 void System::reset() { __real_system_restart_local(); }
 #endif
   //============================================================   LINUX
@@ -42,20 +48,20 @@ const char* getCpu() {
   esp_chip_info_t chip;
   esp_chip_info(&chip);
 
-  sprintf(info, "ESP32 %s %s %s cores : %d revision : 0x%X ",
+  sprintf(sys_info, "ESP32 %s %s %s cores : %d revision : 0x%X ",
           chip.features & CHIP_FEATURE_WIFI_BGN ? "WIFI" : "",
           chip.features & CHIP_FEATURE_BLE ? "/BLE" : "",
           chip.features & CHIP_FEATURE_BT ? "/BT" : "", chip.cores,
           chip.revision);
-  return info;
+  return sys_info;
 }
 
 const char* getSdk() { return ESP.getSdkVersion(); }
 
 const char* getHardware() {
-  sprintf(info, "Flash %dMB %dMhz, CPU %dMHz", ESP.getFlashChipSize() / 1048576,
+  sprintf(sys_info, "Flash %dMB %dMhz, CPU %dMHz", ESP.getFlashChipSize() / 1048576,
           ESP.getFlashChipSpeed() / 1000000, ESP.getCpuFreqMHz());
-  return info;
+  return sys_info;
 }
 
 #endif
@@ -69,7 +75,7 @@ static const char* labels[] = {"hostname",  "upTime",   "heap",
                                "processor", "hardware", "version",
                                "alive",     "cpu",      "sdk"};
 
-char info[100];
+char sys_info[100];
 const char* getVersion() { return __FILE__ " " __DATE__ " " __TIME__; };
 
 const char* getHostname(void) { return Sys::hostname(); };

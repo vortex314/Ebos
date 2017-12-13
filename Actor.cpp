@@ -87,8 +87,6 @@ Actor* Actor::findById(uint16_t id) {
       DEBUG(" Actor '%s' state change '%s' => '%s'", name(), uid.label(_state),
             uid.label(st));
       _state = st;
-      eb.event(id(), state());
-      eb.send();
       return true;
     }
     return false;
