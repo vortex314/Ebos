@@ -33,7 +33,11 @@ uint32_t getFreeHeap() { return 0; }
 
 const char* getSdk() { return "1.2.3"; }
 const char* getHardware() { return "SDK-xxx"; }
-void System::reset() { FATAL("Resetting.... ");while(true); };
+void System::reset() {
+  FATAL("Resetting.... ");
+  while (true)
+    ;
+};
 
 #endif
   //============================================================   ESP32 ARDUINO
@@ -59,8 +63,9 @@ const char* getCpu() {
 const char* getSdk() { return ESP.getSdkVersion(); }
 
 const char* getHardware() {
-  sprintf(sys_info, "Flash %dMB %dMhz, CPU %dMHz", ESP.getFlashChipSize() / 1048576,
-          ESP.getFlashChipSpeed() / 1000000, ESP.getCpuFreqMHz());
+  sprintf(sys_info, "Flash %dMB %dMhz, CPU %dMHz",
+          ESP.getFlashChipSize() / 1048576, ESP.getFlashChipSpeed() / 1000000,
+          ESP.getCpuFreqMHz());
   return sys_info;
 }
 
@@ -76,9 +81,8 @@ static const char* labels[] = {"hostname",  "upTime",   "heap",
                                "alive",     "cpu",      "sdk"};
 
 char sys_info[100];
-const char* getVersion() { return __FILE__ " " __DATE__ " " __TIME__; };
+const char* version = __FILE__ " " __DATE__ " " __TIME__;
 
-const char* getHostname(void) { return Sys::hostname(); };
 uint64_t getUpTime() { return Sys::millis(); };
 
 bool alive = true;
@@ -88,13 +92,14 @@ void System::setup() {
   eb.onDst(H("system")).call(this);
   uid.add(labels, sizeof(labels) / sizeof(const char*));
 
-  Property<bool>::build(alive, id(), H("alive"), 5000);
-  Property<const char*>::build(getHostname, id(), H("hostname"), 20000);
-  Property<uint64_t>::build(getUpTime, id(), H("upTime"), 5000);
-  Property<const char*>::build(getCpu, id(), H("cpu"), 20000);
-  Property<uint32_t>::build(Sys::getFreeHeap, id(), H("heap"), 5000);
-  Property<const char*>::build(getSdk, id(), H("sdk"), 20000);
-  Property<const char*>::build(getHardware, id(), H("hardware"), 20000);
+  new PropGetter<const char*>(Sys::hostname, id(), "hostname", 20000);
+  new Prop<bool>(alive, id(), "alive", 1000);
+  new PropGetter<uint64_t>(Sys::millis, id(), "upTime", 20000);
+  new PropGetter<uint32_t>(Sys::getFreeHeap, id(), "heap", 5000);
+  new Prop<const char*>(version, id(), "version", 20000);
+
+  Property<const char*>::build(getSdk, id(), "sdk", 20000);
+  Property<const char*>::build(getHardware, id(), "hardware", 20000);
 
   timeout(5000);
 }

@@ -20,7 +20,7 @@ Actor::Actor(const char* name) {
   _ptLine = 0;
   _next = 0;
   _public = false;
-  _name=name;
+  _name = name;
   //	setName(name);
   if (first() == 0) {
     setFirst(this);
@@ -82,12 +82,12 @@ Actor* Actor::findById(uint16_t id) {
   return 0;
 }
 
- bool Actor::state(uint32_t st) {
-    if (_state != st) {
-      DEBUG(" Actor '%s' state change '%s' => '%s'", name(), uid.label(_state),
-            uid.label(st));
-      _state = st;
-      return true;
-    }
-    return false;
+bool Actor::state(uint32_t st) {
+  if (_state != st) {
+    DEBUG(" Actor '%s' state change '%s' => '%s'", name(), uid.label(_state),
+          uid.label(st));
+    _state = st;
+    return true;
   }
+  return false;
+}
